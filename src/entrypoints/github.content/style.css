@@ -57,3 +57,25 @@
 .symphony-banner-dismiss:hover {
   color: var(--fgColor-default, var(--color-fg-default, #1f2328));
 }
+
+/* Symphony's own buttons are Symphony orange (the owner's choice, 2026-10-11), whatever button class
+   they copied from their neighbour: the create button beside GitHub's green one, the migrate button in
+   the header, and the banner's install button. GitHub's button rules carry variables and attribute
+   selectors of higher specificity, so these three colours are marked important; nothing else is. */
+.symphony-button,
+.symphony-button:visited {
+  background-color: #d97757 !important;
+  color: #ffffff !important;
+  border-color: rgba(31, 35, 40, 0.2) !important;
+}
+
+.symphony-button:hover,
+.symphony-button:focus-visible {
+  background-color: #c9643f !important;
+  color: #ffffff !important;
+}
+
+.symphony-button:active {
+  background-color: #b5552f !important;
+  color: #ffffff !important;
+}

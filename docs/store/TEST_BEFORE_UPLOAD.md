@@ -20,7 +20,7 @@ tag). The new-repository page is the one no logged-out read can check.
 ## The three things to click
 
 1. **Create a Symphony repository.** Go to https://github.com/new. Beside GitHub's green **Create
-   repository** stands **Create Symphony repository**, in the same shape and size, not green. Type a
+   repository** stands **Create Symphony repository**, in the same shape and size, Symphony orange. Type a
    throwaway name (for example `symphony-hand-test`), leave the rest as it is, press **Create
    Symphony repository**. GitHub creates the repository as if you had pressed its own button and
    lands you on its page. At the top, above the repository header, the banner **Finish setting up
