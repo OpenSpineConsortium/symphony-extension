@@ -46,7 +46,8 @@ are Anthropic's marks, used here to say what Symphony works with.
   opens the repository's board, `blob/board/STATE.md`, in a new tab: a status, drawn as an outline,
   rather than a call to action, and no banner. The topic is read from the About sidebar's topic links
   on the page itself (`src/core/adopted.ts`), never from GitHub's API.
-- A popup with three sentences, three links (the new-repository page, the form, the site) and the
+- A popup with three sentences, three links (the new-repository page, the form, the site), opened
+  through the browser's own new-tab call so that a press in a private window stays in it, and the
   trademark sentence.
 
 ## What it never does
@@ -143,10 +144,10 @@ npm ci
 npm run typecheck
 npm test                 # after a build, test/hygiene.test.ts checks the package too
 npm run build            # -> .output/chrome-mv3
-npm run zip              # -> .output/symphony-1.4.0-chrome.zip, the file the store gets
+npm run zip              # -> .output/symphony-1.4.1-chrome.zip, the file the store gets
 ```
 
-The version is `version` in package.json, three integers (1.4.0), never fractional; WXT writes it
+The version is `version` in package.json, three integers (1.4.1), never fractional; WXT writes it
 into the manifest and the zip's name. `.github/workflows/ci.yml` runs the same five commands on
 Ubuntu with Node 22 and keeps the zip as the run's artifact; it uses no secret.
 

@@ -1,6 +1,6 @@
 # Store listing texts
 
-The exact texts to paste into the Chrome Web Store developer dashboard for Symphony 1.4.0, and the
+The exact texts to paste into the Chrome Web Store developer dashboard for Symphony 1.4.1, and the
 answers to its questions. `SUBMISSION.md` beside this file says where each goes, in the dashboard's
 order; `TEST_BEFORE_UPLOAD.md` is the hand test that comes before the upload. Every name and address
 below is the one in `src/core/names.ts`; when a name changes there, change it here too.
@@ -109,7 +109,7 @@ No remote code. No eval, no new Function, no fetched script, no runtime download
 | User activity | No |
 | Website content | No |
 | Certifications (Chrome's three) | Tick all three: I do not sell or transfer user data to third parties outside the approved use cases; I do not use or transfer user data for purposes unrelated to the item's single purpose; I do not use or transfer user data to determine creditworthiness or for lending purposes. |
-| Privacy policy URL | https://openspineconsortium.com/symphony/privacy.html (the text of PRIVACY.md, version 5) |
+| Privacy policy URL | https://openspineconsortium.com/symphony/privacy.html (the text of PRIVACY.md, version 6) |
 
 If the dashboard asks whether the extension collects or transmits any user data: **No.** The two
 stored values are a repository name the user typed, kept on their own device for at most 15
@@ -125,7 +125,7 @@ minutes; neither is ever transmitted.
 | Privacy policy | https://openspineconsortium.com/symphony/privacy.html |
 | Official URL | https://openspineconsortium.com/ once the site is verified in Google Search Console under the developer account's Google account; empty until then |
 
-The privacy page must answer 200 with version 5 of PRIVACY.md before the upload: reviewers open it,
+The privacy page must answer 200 with version 6 of PRIVACY.md before the upload: reviewers open it,
 and a 404 there is a rejection.
 
 ## Images

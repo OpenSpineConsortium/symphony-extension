@@ -82,7 +82,7 @@ form. The new-repository page is the one no logged-out read can check.
    tab: **Create a Symphony repository** on https://github.com/new, **Open the form** on
    https://github.com/OpenSpineConsortium/symphony-start/issues/new?template=adopt.yml, **About
    Symphony** on https://openspineconsortium.com/symphony/; the trademark sentence; the Privacy
-   link on https://openspineconsortium.com/symphony/privacy.html; "Symphony 1.4.0".
+   link on https://openspineconsortium.com/symphony/privacy.html; "Symphony 1.4.1".
 
 While doing this, keep DevTools' Console open on a github.com page: nothing of Symphony's is
 printed, and no error names the extension. In DevTools' Network tab, filter by the extension's id:
@@ -100,11 +100,11 @@ broken page.
 
 ## Just before uploading
 
-- `unzip -p .output/symphony-1.4.0-chrome.zip manifest.json` shows version 1.4.0, the name
+- `unzip -p .output/symphony-1.4.1-chrome.zip manifest.json` shows version 1.4.1, the name
   Symphony, `"permissions":["storage"]`, `"host_permissions":["https://github.com/*"]`, one content
   script matching `https://github.com/*`, and no `background`, `optional_permissions` or `key`.
 - `npm test` after the build passes with "the built package" tests run, not skipped.
-- https://openspineconsortium.com/symphony/privacy.html shows version 5 of PRIVACY.md;
+- https://openspineconsortium.com/symphony/privacy.html shows version 6 of PRIVACY.md;
   https://github.com/apps/symphonyboard and https://github.com/apps/symphony-setup answer.
 - The three images were looked at: `public/icon/128.png`, `store-assets/promo-440x280.png`,
   `store-assets/screenshot-1-1280x800.png`.

@@ -1,6 +1,6 @@
 # Symphony privacy statement
 
-Version 5, 2026-10-11. This text is also at https://openspineconsortium.com/symphony/privacy.html.
+Version 6, 2026-10-11. This text is also at https://openspineconsortium.com/symphony/privacy.html.
 
 Who makes Symphony: Gregory Schwing, trading as OpenSpineConsortium ("the developer"). Questions:
 the contact on https://openspineconsortium.com/symphony/.
@@ -20,8 +20,10 @@ beyond the few things listed below.
 
 Nothing, to anyone. It makes no network request of its own: no fetch, no WebSocket, no beacon, no
 update check. Its buttons are ordinary links that open GitHub's own install pages for the Symphony
-Apps, as a bookmark would; GitHub sees that visit as it sees any visit, and the extension learns
-nothing of it. The developer receives nothing from the extension.
+Apps, as a bookmark would (the popup's three links open their page through the browser's own
+new-tab call, so that one pressed in a private window opens in that window; the call needs no
+permission and carries nothing but the address); GitHub sees that visit as it sees any visit, and
+the extension learns nothing of it. The developer receives nothing from the extension.
 
 ## What stays on your device
 
@@ -96,8 +98,8 @@ Symphony is for people who administer GitHub repositories. It is not directed at
 ## Changes
 
 A new version of this statement ships with the version of the extension it applies to, and the page
-at https://openspineconsortium.com/symphony/privacy.html is updated with it. Version 5 (extension
-1.4.0) says that the step from Symphony Setup's install page covers its permissions page too, when
+at https://openspineconsortium.com/symphony/privacy.html is updated with it. Version 6 (extension
+1.4.1) says how the popup's links open; version 5 (extension 1.4.0) says that the step from Symphony Setup's install page covers its permissions page too, when
 it arrived without the repository; version 4 (extension 1.3.0) added the third case in which the page is moved, from the second App's account-picker page,
 where the first App's install now lands, to its install page with the repository preselected, and
 that page's address among what is read; version 3 (extension 1.2.0) added the About sidebar's topic
