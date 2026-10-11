@@ -104,6 +104,13 @@ The version is `version` in package.json, three integers (1.0.0), never fraction
 into the manifest and the zip's name. `.github/workflows/ci.yml` runs the same five commands on
 Ubuntu with Node 22 and keeps the zip as the run's artifact; it uses no secret.
 
+The newest build from `main` is always at
+https://github.com/OpenSpineConsortium/symphony-extension/releases/latest/download/symphony-chrome.zip:
+`.github/workflows/release.yml`, one call of the Chrome Web Store release kit
+(OpenSpineConsortium/chrome-store-release-kit), makes the GitHub release `extension-v<version>.<commit
+count>` on every push to `main` with the zip attached, and sends the same zip to the store once the
+store secrets exist (`docs/store/SUBMISSION.md`, "Releases from CI").
+
 The images are committed and are not drawn in CI. To draw them again, with a Playwright Chromium
 already on the machine (never `playwright install`):
 
@@ -113,9 +120,10 @@ node scripts/build-assets.mjs --pw <dir of playwright-core> --chromium <path to 
 
 ## Load unpacked
 
-1. `npm run build`.
+1. `npm run build`; or, without Node, download the zip linked above and unzip it into a folder of
+   its own, which holds the same files as `.output/chrome-mv3`.
 2. In Chrome, open `chrome://extensions`, turn on **Developer mode** (top right), press **Load
-   unpacked** and choose `.output/chrome-mv3`.
+   unpacked** and choose `.output/chrome-mv3` (or that folder).
 3. Chrome asks for nothing at install beyond what the manifest says: "Read and change your data on
    github.com". Pin the toolbar button if you like; the popup is the only thing it opens.
 4. After a rebuild, press the reload arrow on the Symphony card.
