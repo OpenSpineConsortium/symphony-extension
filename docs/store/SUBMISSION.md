@@ -36,8 +36,8 @@ script: the upload is done by hand in the browser.
    one-time fee paid. Under **Account**, the publisher display name (Gregory Schwing, trading as
    OpenSpineConsortium), a verified contact e-mail, and the trader / non-trader answer.
 6. **The names.** The repositories and the Apps are being renamed to the ones in
-   `src/core/names.ts`: the App slug `openspine-symphony`, the Setup App `openspine-symphony-setup`,
-   the front door `OpenSpineConsortium/symphony-start`. Confirm https://github.com/apps/openspine-symphony
+   `src/core/names.ts`: the App slug `symphony`, the Setup App `symphony-setup`,
+   the front door `OpenSpineConsortium/symphony-start`. Confirm https://github.com/apps/symphony
    answers before the upload, since every button opens its install page; an extension whose
    button opens a 404 is rejected or, worse, published broken.
 

@@ -26,8 +26,8 @@ tag). The new-repository page is the one no logged-out read can check.
    lands you on its page. At the top, above the repository header, the banner **Finish setting up
    Symphony** with its sentence, the button **Install the Symphony App** and the link **What
    Symphony sets up**. Press the button: a new tab opens on
-   https://github.com/apps/openspine-symphony/installations/new/permissions?target_id=... (your
-   account pre-selected) or on https://github.com/apps/openspine-symphony/installations/new. Go
+   https://github.com/apps/symphony/installations/new/permissions?target_id=... (your
+   account pre-selected) or on https://github.com/apps/symphony/installations/new. Go
    back, reload the repository page: the banner is gone (the note was taken). Open the extension's
    storage once to see it is empty: on the card, **Inspect views** is not offered for a content
    script, so instead reload github.com/new, press the button once more for a second throwaway
@@ -68,7 +68,7 @@ broken page.
   script matching `https://github.com/*`, and no `background`, `optional_permissions` or `key`.
 - `npm test` after the build passes with "the built package" tests run, not skipped.
 - https://openspineconsortium.com/symphony/privacy.html shows version 1 of PRIVACY.md;
-  https://github.com/apps/openspine-symphony answers.
+  https://github.com/apps/symphony answers.
 - The three images were looked at: `public/icon/128.png`, `store-assets/promo-440x280.png`,
   `store-assets/screenshot-1-1280x800.png`.
 - Then follow `SUBMISSION.md`.
