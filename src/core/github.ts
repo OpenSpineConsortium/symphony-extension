@@ -1,6 +1,7 @@
 // What Symphony adds to a github.com page, and how it finds where. Every function takes the document
 // as an argument, so the tests run them against saved fixtures (test/fixtures) in linkedom, and every
-// one is idempotent: a second run finds its own mark (data-symphony) and does nothing more.
+// one is idempotent: a second run finds its own mark (data-symphony) and does nothing more than
+// refresh what the one element already carries.
 //
 // GitHub changes its markup without notice, so nothing here depends on one class name alone. A
 // button is found by what it is (a submit button that says "Create repository", in a form), the
@@ -137,12 +138,15 @@ export function injectCreateButton(doc: Document, onPress: (press: CreatePress) 
 /**
  * The button "Migrate to Symphony" in the repository header's action list, beside Watch, Fork and
  * Star, as one more list item. It is a link that opens the App's install page in a new tab: no script
- * runs on that page and no permission is needed to open it.
+ * runs on that page and no permission is needed to open it. `onPress`, when given, runs at the click
+ * (it records the migrate note) and the link's own action goes on whatever it did; a later call
+ * refreshes the address and the handler both, so nothing accumulates on the one link.
  */
-export function injectMigrateButton(doc: Document, href: string): HTMLAnchorElement | undefined {
+export function injectMigrateButton(doc: Document, href: string, onPress?: () => void): HTMLAnchorElement | undefined {
   const existing = doc.querySelector<HTMLAnchorElement>(`a[${MARK}="migrate"]`);
   if (existing) {
     existing.href = href;
+    pressWith(existing, onPress);
     return existing;
   }
   const actions = findHeaderActions(doc);
@@ -154,6 +158,7 @@ export function injectMigrateButton(doc: Document, href: string): HTMLAnchorElem
   link.href = href;
   link.target = '_blank';
   link.rel = 'noopener noreferrer';
+  pressWith(link, onPress);
   const neighbour = actions.querySelector('a.btn, button.btn, a[class*="ButtonBase"], button[class*="ButtonBase"]');
   if (neighbour) dressLike(link, neighbour, 'default');
   else link.className = 'btn btn-sm';
@@ -162,6 +167,23 @@ export function injectMigrateButton(doc: Document, href: string): HTMLAnchorElem
   item.append(link);
   actions.append(item);
   return link;
+}
+
+/**
+ * A link's press handler, as its one onclick rather than a listener, so that the passes the content
+ * script makes replace it instead of stacking a handler per pass. The handler's failure is swallowed:
+ * the link is GitHub's page to open, and a note that could not be written must not stop it.
+ */
+function pressWith(link: HTMLAnchorElement, onPress?: () => void): void {
+  link.onclick = onPress
+    ? () => {
+        try {
+          onPress();
+        } catch {
+          // the link goes on without the note
+        }
+      }
+    : null;
 }
 
 /**
@@ -195,14 +217,89 @@ export interface BannerLinks {
  * The banner "Finish setting up Symphony" at the top of a repository page the person just created
  * through the Create button: one primary button to the App's install page, one text link to the site,
  * and a Dismiss that removes it. Drawn with Primer's flash classes so it reads as part of the page.
+ * `onInstall` runs when the button is pressed, like the Migrate button's handler, and a later call
+ * refreshes the address and the handler of the one button.
  */
-export function injectBanner(doc: Document, links: BannerLinks): HTMLElement | undefined {
+export function injectBanner(doc: Document, links: BannerLinks, onInstall?: () => void): HTMLElement | undefined {
   const existing = doc.querySelector<HTMLElement>(`div[${MARK}="banner"]`);
-  if (existing) return existing;
+  if (existing) {
+    const button = existing.querySelector<HTMLAnchorElement>('a.symphony-button');
+    if (button) {
+      button.href = links.installHref;
+      pressWith(button, onInstall);
+    }
+    return existing;
+  }
   const anchor = findBannerAnchor(doc);
   if (!anchor) return undefined;
+
+  const install = doc.createElement('a');
+  install.className = 'btn btn-primary btn-sm symphony-button';
+  install.href = links.installHref;
+  install.target = '_blank';
+  install.rel = 'noopener noreferrer';
+  install.textContent = WORDS.bannerInstall;
+  pressWith(install, onInstall);
+  const site = doc.createElement('a');
+  site.className = 'symphony-banner-link';
+  site.href = links.siteHref;
+  site.target = '_blank';
+  site.rel = 'noopener noreferrer';
+  site.textContent = WORDS.bannerSite;
+
+  const banner = flash(doc, 'banner', [strong(doc, WORDS.bannerTitle), ' ', span(doc, WORDS.bannerBody)], [install, site]);
+  anchor.insertAdjacentElement('beforebegin', banner);
+  return banner;
+}
+
+export interface SettingsBannerLinks {
+  /** Symphony Setup's install page, for the repository the migrate note names */
+  setupHref: string;
+  /** that repository, OWNER/NAME, so the person sees which one the banner means */
+  repository: string;
+}
+
+/**
+ * The banner on an installation's settings page, where GitHub lands a Migrate whose account has
+ * SymphonyBoard already: the install page shows no Install button then, so the chain would end here
+ * without a word. One button to Symphony Setup's install page, in the same tab, since that page is the
+ * next step and not a side trip; it carries the repository's name so the person knows which one it
+ * is for. Placed at the top of main, the one landmark every settings page has; a page without a main
+ * gets nothing.
+ */
+export function injectSettingsBanner(doc: Document, links: SettingsBannerLinks, onInstall?: () => void): HTMLElement | undefined {
+  const existing = doc.querySelector<HTMLElement>(`div[${MARK}="settings-banner"]`);
+  if (existing) {
+    const button = existing.querySelector<HTMLAnchorElement>('a.symphony-button');
+    if (button) {
+      button.href = links.setupHref;
+      pressWith(button, onInstall);
+    }
+    return existing;
+  }
+  const main = doc.querySelector('main');
+  if (!main) return undefined;
+
+  const install = doc.createElement('a');
+  install.className = 'btn btn-primary btn-sm symphony-button';
+  install.href = links.setupHref;
+  install.textContent = WORDS.settingsInstall;
+  pressWith(install, onInstall);
+  const repository = doc.createElement('code');
+  repository.className = 'symphony-banner-repository';
+  repository.textContent = links.repository;
+
+  const banner = flash(doc, 'settings-banner', [strong(doc, WORDS.settingsTitle), ' (', repository, ') ', span(doc, WORDS.settingsBody)], [install]);
+  const first = main.firstElementChild;
+  if (first) first.insertAdjacentElement('beforebegin', banner);
+  else main.append(banner);
+  return banner;
+}
+
+/** a Primer flash with Symphony's mark: the words, the actions and a Dismiss that removes it */
+function flash(doc: Document, mark: string, wordParts: Array<Node | string>, actionParts: Element[]): HTMLElement {
   const banner = doc.createElement('div');
-  banner.setAttribute(MARK, 'banner');
+  banner.setAttribute(MARK, mark);
   banner.className = 'flash flash-full symphony-banner';
   banner.setAttribute('role', 'status');
 
@@ -211,27 +308,11 @@ export function injectBanner(doc: Document, links: BannerLinks): HTMLElement | u
 
   const words = doc.createElement('div');
   words.className = 'symphony-banner-words';
-  const title = doc.createElement('strong');
-  title.textContent = WORDS.bannerTitle;
-  const body = doc.createElement('span');
-  body.textContent = WORDS.bannerBody;
-  words.append(title, ' ', body);
+  words.append(...wordParts);
 
   const actions = doc.createElement('div');
   actions.className = 'symphony-banner-actions';
-  const install = doc.createElement('a');
-  install.className = 'btn btn-primary btn-sm symphony-button';
-  install.href = links.installHref;
-  install.target = '_blank';
-  install.rel = 'noopener noreferrer';
-  install.textContent = WORDS.bannerInstall;
-  const site = doc.createElement('a');
-  site.className = 'symphony-banner-link';
-  site.href = links.siteHref;
-  site.target = '_blank';
-  site.rel = 'noopener noreferrer';
-  site.textContent = WORDS.bannerSite;
-  actions.append(install, site);
+  actions.append(...actionParts);
 
   const dismiss = doc.createElement('button');
   dismiss.type = 'button';
@@ -246,8 +327,19 @@ export function injectBanner(doc: Document, links: BannerLinks): HTMLElement | u
 
   inner.append(words, actions, dismiss);
   banner.append(inner);
-  anchor.insertAdjacentElement('beforebegin', banner);
   return banner;
+}
+
+function strong(doc: Document, text: string): HTMLElement {
+  const el = doc.createElement('strong');
+  el.textContent = text;
+  return el;
+}
+
+function span(doc: Document, text: string): HTMLElement {
+  const el = doc.createElement('span');
+  el.textContent = text;
+  return el;
 }
 
 /**
@@ -266,7 +358,7 @@ function findBannerAnchor(doc: Document): Element | undefined {
   return undefined;
 }
 
-/** everything Symphony added, taken off the page again (on navigation to a page it does not touch) */
+/** everything Symphony added, the two banners included, taken off the page again (on navigation to a page it does not touch) */
 export function removeInjected(doc: Document): void {
   for (const el of Array.from(doc.querySelectorAll(`[${MARK}]`))) el.remove();
 }

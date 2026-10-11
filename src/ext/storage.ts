@@ -1,6 +1,6 @@
-// browser.storage.local as the small key-value store core/pending.ts expects. It is the one thing the
-// "storage" permission is for, and it ever holds one key, the pending note (PRIVACY.md). Nothing is
-// read from session storage, cookies or the page.
+// browser.storage.local as the small key-value store core/pending.ts and core/migrate.ts expect. It is
+// the one thing the "storage" permission is for, and it ever holds two keys, the pending note and the
+// migrate note (PRIVACY.md). Nothing is read from session storage, cookies or the page.
 import { browser } from 'wxt/browser';
 import type { KV } from '../core/pending';
 

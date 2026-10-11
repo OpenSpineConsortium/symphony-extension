@@ -18,14 +18,15 @@ export const SETUP_APP_SLUG = 'symphony-setup';
 /** the front door repository, whose issue form starts the adoption */
 export const FRONT_DOOR_REPO = 'OpenSpineConsortium/symphony-start';
 
-/** the form on the front door, the page the App's Setup URL sends an installer to */
-export const FORM_URL = `https://github.com/${FRONT_DOOR_REPO}/issues/new?template=adopt.yml`;
+/** the front door's new-issue page, and the form on it: the page both Apps' Setup URL sends an installer to */
+export const FORM_PAGE_URL = `https://github.com/${FRONT_DOOR_REPO}/issues/new`;
+export const FORM_URL = `${FORM_PAGE_URL}?template=adopt.yml`;
 
 /** the product's site and its privacy page */
 export const SITE_URL = 'https://openspineconsortium.com/symphony/';
 export const PRIVACY_URL = `${SITE_URL}privacy.html`;
 
-/** GitHub's own page for installing the App; the one the two buttons open */
+/** GitHub's own pages for installing the two Apps: the first is what the two buttons open, the second what follows it */
 export const INSTALL_URL = `https://github.com/apps/${APP_SLUG}/installations/new`;
 export const SETUP_INSTALL_URL = `https://github.com/apps/${SETUP_APP_SLUG}/installations/new`;
 
@@ -35,14 +36,17 @@ export const NEW_REPO_URL = 'https://github.com/new';
 /** the one host the content script runs on; nothing of the extension runs anywhere else */
 export const GITHUB_ORIGIN = 'https://github.com';
 
-/** the words on the page: the two buttons, the banner and the popup, so a test can look for them */
+/** the words on the page: the two buttons, the two banners and the popup, so a test can look for them */
 export const WORDS = {
   createButton: 'Create Symphony repository',
   migrateButton: 'Migrate to Symphony',
   bannerTitle: 'Finish setting up Symphony',
-  bannerBody: 'Install the Symphony App on this repository: a pull request with the template or the claim protocol lands within about two minutes.',
-  bannerInstall: 'Install the Symphony App',
+  bannerBody: 'Install the two Symphony Apps on this repository, one page each: a pull request with the template or the claim protocol lands within about two minutes.',
+  bannerInstall: 'Install the Symphony Apps',
   bannerSite: 'What Symphony sets up',
+  settingsTitle: 'SymphonyBoard is installed here already',
+  settingsBody: "To finish, install Symphony Setup on the repository too: it applies the repository's settings for one run, uninstalls itself, and brings you to the form with the repository filled in.",
+  settingsInstall: 'Install Symphony Setup',
   dismiss: 'Dismiss',
   popupWhat: 'Symphony sets up a team of Claude Code AI teammates on a GitHub repository: install its App, press Create on the form it sends you to, and a pull request lands with everything they need.',
   popupHow: 'On github.com this extension adds one button to the new-repository page and one to every repository header, so the flow starts where you already are.',

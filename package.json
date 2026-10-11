@@ -2,7 +2,7 @@
   "name": "symphony",
   "displayName": "Symphony",
   "description": "Puts the Symphony App's adoption flow one click away on github.com: create a Symphony repository, or migrate the one you are looking at.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "license": "MIT",

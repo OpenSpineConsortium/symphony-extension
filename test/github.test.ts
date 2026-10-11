@@ -1,15 +1,16 @@
-// The two injections and the banner against the saved fixtures (test/fixtures): a plausible classic
-// github.com/new, the React rewrite of it, a repository main page in its classic shape (repo.html,
-// written from memory) and one in the shape github.com served on 2026-10-11 (repo-react.html, trimmed
-// from a logged-out read of a real page). What these tests prove is that the injection finds its
-// landmarks in those shapes, wears the neighbouring button's classes, does nothing twice, and leaves a
-// page without the landmarks untouched. The new-repository page needs a login to read, so whether its
-// live markup matches is checked by hand (docs/store/TEST_BEFORE_UPLOAD.md).
+// The two injections and the two banners against the saved fixtures (test/fixtures): a plausible
+// classic github.com/new, the React rewrite of it, a repository main page in its classic shape
+// (repo.html, written from memory) and one in the shape github.com served on 2026-10-11
+// (repo-react.html, trimmed from a logged-out read of a real page). What these tests prove is that the
+// injection finds its landmarks in those shapes, wears the neighbouring button's classes, does nothing
+// twice, runs the one press handler it was last given, and leaves a page without the landmarks
+// untouched. The new-repository page needs a login to read, so whether its live markup matches is
+// checked by hand (docs/store/TEST_BEFORE_UPLOAD.md).
 import { readFileSync } from 'node:fs';
 import { parseHTML } from 'linkedom';
 import { describe, expect, it } from 'vitest';
-import { injectBanner, injectCreateButton, injectMigrateButton, MARK, removeInjected, type CreatePress } from '../src/core/github';
-import { INSTALL_URL, SITE_URL, WORDS } from '../src/core/names';
+import { injectBanner, injectCreateButton, injectMigrateButton, injectSettingsBanner, MARK, removeInjected, type CreatePress } from '../src/core/github';
+import { INSTALL_URL, SETUP_INSTALL_URL, SITE_URL, WORDS } from '../src/core/names';
 
 type Page = { document: Document; window: { Event: typeof Event } };
 
@@ -187,6 +188,38 @@ describe('the Migrate button in the repository header', () => {
     expect(injectMigrateButton(p.document, href)).toBeDefined();
   });
 
+  it('runs the press handler at a click and lets the link go on', () => {
+    const p = page('repo');
+    let presses = 0;
+    const link = injectMigrateButton(p.document, href, () => presses++)!;
+    const event = new p.window.Event('click', { bubbles: true, cancelable: true });
+    link.dispatchEvent(event);
+    expect(presses).toBe(1);
+    expect(event.defaultPrevented).toBe(false);
+  });
+
+  it('keeps the one handler it was last given, and none when none is given', () => {
+    const p = page('repo');
+    const calls: string[] = [];
+    const link = injectMigrateButton(p.document, href, () => calls.push('first'))!;
+    injectMigrateButton(p.document, href, () => calls.push('second'));
+    press(p, link);
+    expect(calls).toEqual(['second']);
+    injectMigrateButton(p.document, href);
+    press(p, link);
+    expect(calls).toEqual(['second']);
+  });
+
+  it('swallows a handler that throws: the link is GitHub\'s page to open', () => {
+    const p = page('repo');
+    const link = injectMigrateButton(p.document, href, () => {
+      throw new Error('storage is down');
+    })!;
+    const event = new p.window.Event('click', { bubbles: true, cancelable: true });
+    expect(() => link.dispatchEvent(event)).not.toThrow();
+    expect(event.defaultPrevented).toBe(false);
+  });
+
   it('leaves a page without a header untouched', () => {
     for (const p of [page('new-repo-classic'), blank()]) {
       const before = html(p.document);
@@ -242,6 +275,78 @@ describe('the banner after a Symphony repository is created', () => {
     const p = parseHTML('<!doctype html><html><body><p>bare</p></body></html>') as unknown as Page;
     const before = html(p.document);
     expect(injectBanner(p.document, links)).toBeUndefined();
+    expect(html(p.document)).toBe(before);
+  });
+
+  it('runs the install button\'s handler at a press, and a later call replaces the address and the handler', () => {
+    const p = page('repo');
+    const calls: string[] = [];
+    const banner = injectBanner(p.document, links, () => calls.push('first'))!;
+    const button = banner.querySelector<HTMLAnchorElement>('a.symphony-button')!;
+    expect(button.textContent).toBe(WORDS.bannerInstall);
+    press(p, button);
+    expect(calls).toEqual(['first']);
+    const other = `${INSTALL_URL}/permissions?target_id=98765&suggested_target_id=98765`;
+    expect(injectBanner(p.document, { installHref: other, siteHref: SITE_URL }, () => calls.push('second'))).toBe(banner);
+    expect(button.getAttribute('href')).toBe(other);
+    press(p, button);
+    expect(calls).toEqual(['first', 'second']);
+  });
+});
+
+describe('the banner on an installation\'s settings page', () => {
+  const setupHref = `${SETUP_INSTALL_URL}/permissions?target_id=98765&suggested_target_id=98765&repository_ids[]=555001&state=octo-org%2Fwidgets`;
+  const links = { setupHref, repository: 'octo-org/widgets' };
+  const settings = (): Page =>
+    parseHTML('<!doctype html><html><head><title>Installed GitHub Apps</title></head><body><header>GitHub</header><main><h1>SymphonyBoard</h1><p>Repository access</p></main></body></html>') as unknown as Page;
+
+  it('sits first in main, with its title, the repository, its sentence and one button to the Setup App in the same tab', () => {
+    const p = settings();
+    const banner = injectSettingsBanner(p.document, links);
+    expect(banner).toBeDefined();
+    expect(banner!.getAttribute(MARK)).toBe('settings-banner');
+    expect(banner!.parentElement?.tagName.toLowerCase()).toBe('main');
+    expect(banner!.previousElementSibling).toBeNull();
+    expect(banner!.nextElementSibling?.tagName.toLowerCase()).toBe('h1');
+    expect(banner!.textContent).toContain(WORDS.settingsTitle);
+    expect(banner!.textContent).toContain(WORDS.settingsBody);
+    expect(banner!.textContent).toContain('octo-org/widgets');
+    const anchors = Array.from(banner!.querySelectorAll('a'));
+    expect(anchors.map((a) => [a.textContent, a.getAttribute('href'), a.getAttribute('target')])).toEqual([[WORDS.settingsInstall, setupHref, null]]);
+    expect(Array.from(anchors[0]!.classList)).toContain('btn-primary');
+  });
+
+  it('is added once, runs the handler it was last given, and is dismissed with its button', () => {
+    const p = settings();
+    const calls: string[] = [];
+    const first = injectSettingsBanner(p.document, links, () => calls.push('first'))!;
+    expect(injectSettingsBanner(p.document, links, () => calls.push('second'))).toBe(first);
+    expect(p.document.querySelectorAll(`[${MARK}="settings-banner"]`).length).toBe(1);
+    const button = first.querySelector<HTMLAnchorElement>('a.symphony-button')!;
+    press(p, button);
+    expect(calls).toEqual(['second']);
+    const dismiss = first.querySelector('button')!;
+    expect(dismiss.getAttribute('aria-label')).toBe(WORDS.dismiss);
+    press(p, dismiss);
+    expect(p.document.querySelector(`[${MARK}="settings-banner"]`)).toBeNull();
+  });
+
+  it('goes into an empty main, and leaves a page without a main untouched', () => {
+    const empty = parseHTML('<!doctype html><html><body><main></main></body></html>') as unknown as Page;
+    const banner = injectSettingsBanner(empty.document, links);
+    expect(banner?.parentElement?.tagName.toLowerCase()).toBe('main');
+    const bare = parseHTML('<!doctype html><html><body><p>bare</p></body></html>') as unknown as Page;
+    const before = html(bare.document);
+    expect(injectSettingsBanner(bare.document, links)).toBeUndefined();
+    expect(html(bare.document)).toBe(before);
+  });
+
+  it('is taken off by removeInjected', () => {
+    const p = settings();
+    const before = html(p.document);
+    injectSettingsBanner(p.document, links);
+    expect(p.document.querySelectorAll(`[${MARK}]`).length).toBe(1);
+    removeInjected(p.document);
     expect(html(p.document)).toBe(before);
   });
 });

@@ -1,7 +1,9 @@
-// Which pages the content script touches: the two new-repository pages, a repository's main page, and
-// nothing else. The reserved list matters most: a GitHub page of two segments that is not a repository
-// (the user's own settings, an organization's page) must never get a button.
+// Which pages the content script touches: the two new-repository pages, a repository's main page, the
+// front door's form page, an installation's settings page, and nothing else. The reserved list matters
+// most: a GitHub page of two segments that is not a repository (the user's own settings, an
+// organization's page) must never get a button.
 import { describe, expect, it } from 'vitest';
+import { FRONT_DOOR_REPO } from '../src/core/names';
 import { classify } from '../src/core/route';
 
 describe('classify', () => {
@@ -17,11 +19,38 @@ describe('classify', () => {
     expect(classify('/Octo-Org/my.repo_1.git')).toEqual({ kind: 'repository', owner: 'Octo-Org', name: 'my.repo_1' });
   });
 
+  it('knows the front door\'s form page, whatever the case, with or without a trailing slash', () => {
+    expect(classify(`/${FRONT_DOOR_REPO}/issues/new`)).toEqual({ kind: 'front-door-form' });
+    expect(classify(`/${FRONT_DOOR_REPO}/issues/new/`)).toEqual({ kind: 'front-door-form' });
+    expect(classify(`/${FRONT_DOOR_REPO.toUpperCase()}/issues/new`)).toEqual({ kind: 'front-door-form' });
+    expect(classify(`/${FRONT_DOOR_REPO}/issues/new/x`)).toEqual({ kind: 'other' });
+    expect(classify(`/${FRONT_DOOR_REPO}/issues`)).toEqual({ kind: 'other' });
+  });
+
+  it('knows an installation\'s settings page, a person\'s and an organization\'s, and not the list', () => {
+    expect(classify('/settings/installations/12345')).toEqual({ kind: 'installation-settings' });
+    expect(classify('/settings/installations/12345/')).toEqual({ kind: 'installation-settings' });
+    expect(classify('/organizations/octo-org/settings/installations/12345')).toEqual({ kind: 'installation-settings' });
+    for (const path of [
+      '/settings/installations',
+      '/settings/installations/',
+      '/settings/installations/abc',
+      '/settings/installations/12345/permissions',
+      '/organizations/octo-org/settings/installations',
+      '/organizations/octo-org/settings/installations/abc',
+      '/organizations/-bad/settings/installations/12345',
+      '/organizations/settings/installations/12345',
+    ]) {
+      expect(classify(path), path).toEqual({ kind: 'other' });
+    }
+  });
+
   it('leaves every other page alone', () => {
     for (const path of [
       '/',
       '/settings/profile',
       '/settings/installations',
+      '/octo-org/widgets/issues/new',
       '/orgs/octo-org',
       '/organizations/octo-org/settings/profile',
       '/octo-org',

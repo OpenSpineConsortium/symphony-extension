@@ -79,3 +79,9 @@
   background-color: #b5552f !important;
   color: #ffffff !important;
 }
+
+/* The repository's name in the settings banner, in the page's monospace, as GitHub writes a name */
+.symphony-banner-repository {
+  font-family: var(--fontStack-monospace, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.95em;
+}

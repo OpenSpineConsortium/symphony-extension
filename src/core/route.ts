@@ -1,10 +1,15 @@
 // Which github.com page the content script is on, from the URL alone. The script runs on every
 // github.com page (one match pattern, one host), so it must first decide whether the page is one of
-// the three it touches; everything else is left exactly as GitHub drew it.
+// the five it touches; everything else is left exactly as GitHub drew it.
+import { FRONT_DOOR_REPO } from './names';
 
 export type Route =
   | { kind: 'new-repository' }
   | { kind: 'repository'; owner: string; name: string }
+  /** the front door's new-issue page, where both Apps' Setup URL lands an installer */
+  | { kind: 'front-door-form' }
+  /** one installation's settings page, where GitHub lands an install of an App an account has already */
+  | { kind: 'installation-settings' }
   | { kind: 'other' };
 
 /**
@@ -24,9 +29,14 @@ const RESERVED = new Set([
 /** a GitHub owner or repository name: letters, digits, dots, hyphens and underscores */
 const NAME = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 
+/** an installation's number in its settings page's address: digits only */
+const DIGITS = /^[0-9]+$/;
+
 export function classify(pathname: string): Route {
   const segments = pathname.split('/').filter((s) => s.length > 0);
   if (isNewRepositoryPage(segments)) return { kind: 'new-repository' };
+  if (isFrontDoorForm(segments)) return { kind: 'front-door-form' };
+  if (isInstallationSettings(segments)) return { kind: 'installation-settings' };
   if (segments.length !== 2) return { kind: 'other' };
   const [owner, raw] = segments as [string, string];
   // GitHub serves /owner/name.git nowhere, but a pasted clone address can land on it; strip to be safe
@@ -39,4 +49,17 @@ export function classify(pathname: string): Route {
 function isNewRepositoryPage(segments: string[]): boolean {
   if (segments.length === 1 && segments[0] === 'new') return true;
   return segments.length === 4 && segments[0] === 'organizations' && segments[2] === 'repositories' && segments[3] === 'new';
+}
+
+/** /<front door>/issues/new, the repository compared as GitHub does, without regard to case */
+function isFrontDoorForm(segments: string[]): boolean {
+  if (segments.length !== 4 || segments[2] !== 'issues' || segments[3] !== 'new') return false;
+  return `${segments[0]}/${segments[1]}`.toLowerCase() === FRONT_DOOR_REPO.toLowerCase();
+}
+
+/** /settings/installations/<number>, and an organization's /organizations/<org>/settings/installations/<number>; the list page is neither */
+function isInstallationSettings(segments: string[]): boolean {
+  if (segments.length === 3) return segments[0] === 'settings' && segments[1] === 'installations' && DIGITS.test(segments[2]!);
+  if (segments.length !== 5) return false;
+  return segments[0] === 'organizations' && NAME.test(segments[1]!) && segments[2] === 'settings' && segments[3] === 'installations' && DIGITS.test(segments[4]!);
 }

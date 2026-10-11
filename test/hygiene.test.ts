@@ -200,7 +200,8 @@ describe('the built package', () => {
     }
   });
 
-  const zip = at('.output', 'symphony-1.0.0-chrome.zip');
+  const version = (JSON.parse(read(at('package.json'))) as { version: string }).version;
+  const zip = at('.output', `symphony-${version}-chrome.zip`);
   it.skipIf(!existsSync(zip))('is zipped under the name the store gets', () => {
     expect(statSync(zip).size).toBeGreaterThan(1024);
     expect(statSync(zip).size).toBeLessThan(2 * 1024 * 1024);
