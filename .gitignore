@@ -2,3 +2,7 @@ node_modules/
 .output/
 .wxt/
 *.log
+promo/frames/
+promo/timeline.json
+promo/sfx.wav
+promo/with-sound-*

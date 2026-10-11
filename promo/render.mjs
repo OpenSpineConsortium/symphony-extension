@@ -9,7 +9,7 @@
 
 import { chromium } from 'playwright-core';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, readdirSync, unlinkSync, copyFileSync, statSync } from 'node:fs';
+import { mkdirSync, readdirSync, unlinkSync, copyFileSync, statSync, writeFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -37,6 +37,35 @@ async function openPage(browser, width, height, query) {
   return page;
 }
 
+// The sound: the page's timeline to timeline.json, sound.py to sfx.wav, and
+// the wav muxed into the mp4 (AAC) and the webm (Opus) in place; the picture
+// is copied, not re-encoded. Skipped, with a word, where python3 or numpy is
+// missing (PYTHON names another interpreter).
+async function soundInto(browser) {
+  const python = process.env.PYTHON || 'python3';
+  try {
+    execFileSync(python, ['-c', 'import numpy'], { stdio: 'ignore' });
+  } catch (e) {
+    console.log('no ' + python + ' with numpy: the video stays silent');
+    return;
+  }
+  const page = await openPage(browser, WIDTH, HEIGHT, '');
+  const timeline = await page.evaluate(() => window.timeline());
+  writeFileSync(join(here, 'timeline.json'), JSON.stringify(timeline, null, 1) + '\n');
+  run(python, [join(here, 'sound.py'), join(here, 'timeline.json'), join(here, 'sfx.wav')]);
+  for (const [name, codec] of [['symphony-promo.mp4', ['-c:a', 'aac', '-b:a', '192k']],
+                               ['symphony-promo.webm', ['-c:a', 'libopus', '-b:a', '128k']]]) {
+    const silent = join(here, name);
+    if (!existsSync(silent)) continue;
+    const withSound = join(here, 'with-sound-' + name);
+    run(FFMPEG, ['-y', '-loglevel', 'error', '-i', silent, '-i', join(here, 'sfx.wav'),
+      '-map', '0:v:0', '-map', '1:a:0', '-c:v', 'copy', ...codec, '-shortest', withSound]);
+    copyFileSync(withSound, silent);
+    unlinkSync(withSound);
+    console.log(name + ': sound muxed in');
+  }
+}
+
 async function shoot(page, t, path, width, height) {
   await page.evaluate((s) => window.renderAt(s), t);
   await page.screenshot({ path, clip: { x: 0, y: 0, width, height }, animations: 'disabled', caret: 'hide' });
@@ -50,7 +79,17 @@ const browser = await chromium.launch({
 
 try {
   const argv = process.argv.slice(2);
-  if (argv[0] === '--stills') {
+  if (argv[0] === '--sound') {
+    // the sound alone: the timeline from the page, sound.py, then the mux
+    // into the mp4 and the webm already rendered
+    await soundInto(browser);
+  } else if (argv[0] === '--timeline') {
+    // the moments the sound is written against, as the page computes them
+    const page = await openPage(browser, WIDTH, HEIGHT, '');
+    const timeline = await page.evaluate(() => window.timeline());
+    writeFileSync(argv[1], JSON.stringify(timeline, null, 1) + '\n');
+    console.log(argv[1] + ': ' + timeline.launches.length + ' launches, ' + timeline.departures.length + ' pair departures');
+  } else if (argv[0] === '--stills') {
     const dir = argv[1];
     mkdirSync(dir, { recursive: true });
     const page = await openPage(browser, WIDTH, HEIGHT, '');
@@ -74,6 +113,8 @@ try {
       await shoot(page, i / FPS, join(framesDir, 'frame-' + pad(i) + '.png'), WIDTH, HEIGHT);
       if (i % 100 === 0) console.log('frame ' + i + '/' + total + ' after ' + ((Date.now() - started) / 1000).toFixed(0) + ' s');
     }
+
+    await soundInto(browser);
 
     // The store image shows the page at the store's own size: the composition
     // is fitted inside, moved down to sit in the middle, and the background

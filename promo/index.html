@@ -664,9 +664,37 @@
     drawLight(ctx, t);
   }
 
+  // The moments the sound design (sound.py) is written against, from the
+  // same numbers the picture is drawn from: the launches with their
+  // landings, when each pair of Claude icons leaves the user's shadow (the
+  // clock crossing a whole place), the arrows, and the rest of T.
+  function pairDeparture(pair) {
+    var lo = T.claudeStart, hi = T.claudeLand;
+    for (var i = 0; i < 40; i++) {
+      var mid = (lo + hi) / 2;
+      if (trainClock(mid) < pair - 1) lo = mid; else hi = mid;
+    }
+    return (lo + hi) / 2;
+  }
+  function timeline() {
+    var slots = [0].concat(SLOTS);
+    var arrows = [];
+    for (var i = 0; i < slots.length; i++) arrows.push({ slot: slots[i], begin: arrowBegin(slots[i]), done: arrowDone(slots[i]) });
+    var launches = [];
+    for (var j = 0; j < LAUNCHES.length; j++) {
+      var L = LAUNCHES[j], count = 0;
+      for (var k = 0; k < slots.length; k++) if (arrowDone(slots[k]) <= L.at) count++;
+      launches.push({ at: L.at, travel: L.travel, landed: L.at + L.travel, count: count, heat: heat(L.at) });
+    }
+    var departures = [];
+    for (var p = 1; p <= PAIRS; p++) departures.push({ pair: p, at: pairDeparture(p), slots: [SLOTS[2 * (p - 1)], SLOTS[2 * (p - 1) + 1]] });
+    return { duration: DURATION, T: T, pairs: PAIRS, slotStep: SLOT_STEP, arrows: arrows, launches: launches, departures: departures };
+  }
+
   window.renderAt = renderAt;
   window.DURATION = DURATION;
   window.FPS = FPS;
+  window.timeline = timeline;
 
   if (params.get('live') === '1') {
     document.body.classList.add('live');
