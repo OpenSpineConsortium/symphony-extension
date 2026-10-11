@@ -94,8 +94,8 @@ exact version and always uploads it; "Run workflow" with `upload` or
   `/organizations/*/repositories/new`, which no narrower pattern covers.
 - **Single purpose.** One purpose, stated in `LISTING.md`: put the App's install flow one click
   away on github.com. The popup's three links serve the same purpose.
-- **Data.** Nothing is collected or transmitted. The one stored value is on the device for at most
-  15 minutes. If a reviewer reads the typed repository name as "website content", the answer is
+- **Data.** Nothing is collected or transmitted. The two stored notes stay on the device, for at
+  most 15 and 30 minutes. If a reviewer reads the typed repository name as "website content", the answer is
   that it is read only when the user presses Symphony's own button, kept only on the device, and
   never transmitted; the data-usage disclosures stay all No.
 - **Trademarks and names.** "Symphony" is the developer's own name for the product. "GitHub",

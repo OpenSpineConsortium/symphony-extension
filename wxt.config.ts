@@ -1,8 +1,8 @@
 // Symphony's manifest. One content script on https://github.com/* and a popup; the permission
-// "storage" for the one pending note, the host permission for that one origin, and nothing else: no
-// background script, no tabs, no cookies, no scripting, no optional permission, no other host, and
-// no origin on an Anthropic domain, ever. The buttons open GitHub's own install page as links, which
-// needs no permission. test/hygiene.test.ts holds this file and the built manifest to that list.
+// "storage" for the two notes (the pending note and the migrate note), the host permission for that
+// one origin, and nothing else: no background script, no tabs, no cookies, no scripting, no optional
+// permission, no other host, and no origin on an Anthropic domain, ever. The buttons open GitHub's
+// own pages as links, which needs no permission. test/hygiene.test.ts holds this file and the built manifest to that list.
 import { defineConfig } from 'wxt';
 import { GITHUB_ORIGIN, PRODUCT_NAME, SITE_URL } from './src/core/names';
 
