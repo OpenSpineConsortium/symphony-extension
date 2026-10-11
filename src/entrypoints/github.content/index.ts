@@ -2,12 +2,14 @@
 // permission name that one origin). It adds, at most, two buttons and one of two banners
 // (core/github.ts). From the page it reads the typed repository name when the person presses
 // Symphony's own Create button; on a repository's main page, the meta tags that name the owner's
-// login and id and the repository's id and owner/name; on the front door's form page, the query
-// string (installation_id, which says an install just happened, and state, the repository GitHub
-// handed back); and on an installation's settings page, nothing but the address that says it is one.
-// No request is made from here, to anyone: the buttons are links to GitHub's own install pages, and
-// the only writes are two notes in the extension's storage, the pending note (core/pending.ts) and
-// the migrate note (core/migrate.ts).
+// login and id and the repository's id and owner/name, and the About sidebar's topic links, only to
+// see whether the topic symphony is among them (core/adopted.ts), the sign that the repository is
+// adopted already; on the front door's form page, the query string (installation_id, which says an
+// install just happened, and state, the repository GitHub handed back); and on an installation's
+// settings page, nothing but the address that says it is one. No request is made from here, to
+// anyone: the buttons are links to GitHub's own pages, the Apps' install pages or, on an adopted
+// repository, its board, and the only writes are two notes in the extension's storage, the pending
+// note (core/pending.ts) and the migrate note (core/migrate.ts).
 //
 // The extension navigates the page in two cases and no other, both on the front door's form page
 // and both with location.replace, in onForm below: on to Symphony Setup's install page once
@@ -21,10 +23,11 @@
 // popstate) and, throttled, when the document changes. Every application is idempotent and wrapped
 // so that a failure anywhere leaves the page as GitHub drew it.
 import { defineContentScript } from 'wxt/utils/define-content-script';
-import { injectBanner, injectCreateButton, injectMigrateButton, injectSettingsBanner, removeInjected } from '../../core/github';
+import { isAdopted } from '../../core/adopted';
+import { injectBanner, injectCreateButton, injectMigrateButton, injectReadyButton, injectSettingsBanner, removeInjected } from '../../core/github';
 import { installUrl, ownerIdFromPage, repositoryIdFromPage, setupInstallUrl, type Target } from '../../core/install';
 import { advanceMigration, clearMigration, migrationFor, migrationTarget, nextOnForm, readMigration, recordMigration, type Migration } from '../../core/migrate';
-import { GITHUB_ORIGIN, SITE_URL } from '../../core/names';
+import { boardUrl, GITHUB_ORIGIN, SITE_URL } from '../../core/names';
 import { pendingFor, recordPending, takePending } from '../../core/pending';
 import { classify, type Route } from '../../core/route';
 import { local } from '../../ext/storage';
@@ -74,6 +77,10 @@ function start(doc: Document): void {
           const note = pendingFor(press.name, press.owner, Date.now());
           return note ? recordPending(local, note) : Promise.resolve();
         });
+      } else if (route.kind === 'repository' && isAdopted(doc)) {
+        // adopted already, by the topic the adoption set: the header's button is a status that opens the
+        // board, and there is no banner, since the banner asks for the install this repository has had
+        injectReadyButton(doc, boardUrl(route.owner, route.name));
       } else if (route.kind === 'repository') {
         const target = targetOf(route);
         const href = installUrl(target);
@@ -162,7 +169,8 @@ function start(doc: Document): void {
   for (const event of ['turbo:load', 'turbo:render']) doc.addEventListener(event, applySoon);
   for (const event of ['popstate', 'pageshow']) window.addEventListener(event, applySoon);
   const observer = new MutationObserver(applySoon);
-  // the attributes too, for the one GitHub toggles: its Create button's disabled state, which ours follows
+  // the attributes too, for the one GitHub toggles: its Create button's disabled state, which ours follows;
+  // the About sidebar, drawn after the header, comes in as added nodes, and turns the header's button around
   observer.observe(doc.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled', 'aria-disabled'] });
 }
 

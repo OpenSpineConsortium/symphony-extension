@@ -61,7 +61,8 @@
 /* Symphony's own buttons are Symphony orange (the owner's choice, 2026-10-11), whatever button class
    they copied from their neighbour: the create button beside GitHub's green one, the migrate button in
    the header, and the banner's install button. GitHub's button rules carry variables and attribute
-   selectors of higher specificity, so these three colours are marked important; nothing else is. */
+   selectors of higher specificity, so these three colours are marked important, and so are the ready
+   state's below; nothing else is. */
 .symphony-button,
 .symphony-button:visited {
   background-color: #d97757 !important;
@@ -78,6 +79,20 @@
 .symphony-button:active {
   background-color: #b5552f !important;
   color: #ffffff !important;
+}
+
+/* The header's button once the repository is adopted, "Ready for Symphony": a status rather than a
+   call to action, so the Symphony orange is its border and its text on a transparent background, the
+   same at rest, hovered, pressed and visited, and never white text on orange. Both classes are named
+   so these rules outrank the .symphony-button ones above, which they share the important mark with. */
+.symphony-button.symphony-ready,
+.symphony-button.symphony-ready:visited,
+.symphony-button.symphony-ready:hover,
+.symphony-button.symphony-ready:focus-visible,
+.symphony-button.symphony-ready:active {
+  background-color: transparent !important;
+  color: #d97757 !important;
+  border-color: #d97757 !important;
 }
 
 /* The repository's name in the settings banner, in the page's monospace, as GitHub writes a name */

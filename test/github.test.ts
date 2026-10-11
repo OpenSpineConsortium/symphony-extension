@@ -3,14 +3,14 @@
 // (repo.html, written from memory) and one in the shape github.com served on 2026-10-11
 // (repo-react.html, trimmed from a logged-out read of a real page). What these tests prove is that the
 // injection finds its landmarks in those shapes, wears the neighbouring button's classes, does nothing
-// twice, runs the one press handler it was last given, and leaves a page without the landmarks
-// untouched. The new-repository page needs a login to read, so whether its live markup matches is
-// checked by hand (docs/store/TEST_BEFORE_UPLOAD.md).
+// twice, runs the one press handler it was last given, turns the header's one button between its two
+// states, and leaves a page without the landmarks untouched. The new-repository page needs a login to
+// read, so whether its live markup matches is checked by hand (docs/store/TEST_BEFORE_UPLOAD.md).
 import { readFileSync } from 'node:fs';
 import { parseHTML } from 'linkedom';
 import { describe, expect, it } from 'vitest';
-import { injectBanner, injectCreateButton, injectMigrateButton, injectSettingsBanner, MARK, removeInjected, type CreatePress } from '../src/core/github';
-import { INSTALL_URL, SETUP_INSTALL_URL, SITE_URL, WORDS } from '../src/core/names';
+import { injectBanner, injectCreateButton, injectMigrateButton, injectReadyButton, injectSettingsBanner, MARK, removeInjected, type CreatePress } from '../src/core/github';
+import { boardUrl, INSTALL_URL, SETUP_INSTALL_URL, SITE_URL, WORDS } from '../src/core/names';
 
 type Page = { document: Document; window: { Event: typeof Event } };
 
@@ -226,6 +226,109 @@ describe('the Migrate button in the repository header', () => {
       expect(injectMigrateButton(p.document, href)).toBeUndefined();
       expect(html(p.document)).toBe(before);
     }
+  });
+
+  it('says which state it is in, and wears the migrate class and not the ready one', () => {
+    const p = page('repo-react');
+    const link = injectMigrateButton(p.document, href)!;
+    expect(link.getAttribute(`${MARK}-state`)).toBe('migrate');
+    const classes = Array.from(link.classList);
+    expect(classes).toContain('symphony-button');
+    expect(classes).toContain('symphony-migrate');
+    expect(classes).not.toContain('symphony-ready');
+  });
+});
+
+describe('the Ready button in the repository header, once the repository is adopted', () => {
+  const board = boardUrl('octo-org', 'widgets');
+  const install = `${INSTALL_URL}/permissions?target_id=98765`;
+
+  it('is the board\'s address', () => {
+    expect(board).toBe('https://github.com/octo-org/widgets/blob/board/STATE.md');
+  });
+
+  for (const fixture of ['repo', 'repo-react']) {
+    it(`is the same list item as the migrate button, in the ready state, a link to the board in a new tab (${fixture})`, () => {
+      const p = page(fixture);
+      const link = injectReadyButton(p.document, board);
+      expect(link).toBeDefined();
+      expect(link!.textContent).toBe(WORDS.readyButton);
+      expect(link!.getAttribute('href')).toBe(board);
+      expect(link!.getAttribute('target')).toBe('_blank');
+      expect(link!.getAttribute('rel')).toContain('noopener');
+      expect(link!.getAttribute(MARK)).toBe('migrate');
+      expect(link!.getAttribute(`${MARK}-state`)).toBe('ready');
+      expect(link!.parentElement?.getAttribute(MARK)).toBe('migrate-item');
+      expect(link!.parentElement?.parentElement?.tagName.toLowerCase()).toBe('ul');
+      const classes = Array.from(link!.classList);
+      expect(classes).toContain('symphony-button');
+      expect(classes).toContain('symphony-ready');
+      expect(classes).not.toContain('symphony-migrate');
+      // dressed like its neighbours, as the migrate button is
+      expect(classes).toContain(fixture === 'repo' ? 'btn' : 'prc-Button-ButtonBase-9n-Xk');
+    });
+  }
+
+  it('is added once', () => {
+    const p = page('repo');
+    const first = injectReadyButton(p.document, board);
+    expect(injectReadyButton(p.document, board)).toBe(first);
+    expect(p.document.querySelectorAll(`[${MARK}="migrate"]`).length).toBe(1);
+    expect(p.document.querySelectorAll(`[${MARK}="migrate-item"]`).length).toBe(1);
+  });
+
+  it('carries no press handler: there is nothing to record, and a click opens the board as a plain link', () => {
+    const p = page('repo');
+    const link = injectReadyButton(p.document, board)!;
+    expect(link.onclick).toBeNull();
+    const event = new p.window.Event('click', { bubbles: true, cancelable: true });
+    link.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+  });
+
+  it('turns the migrate button into the ready one, handler and all, and back again', () => {
+    const p = page('repo-react');
+    let presses = 0;
+    const link = injectMigrateButton(p.document, install, () => presses++)!;
+    // the About sidebar comes in after the header: the one element turns around
+    expect(injectReadyButton(p.document, board)).toBe(link);
+    expect(link.textContent).toBe(WORDS.readyButton);
+    expect(link.getAttribute('href')).toBe(board);
+    expect(link.getAttribute(`${MARK}-state`)).toBe('ready');
+    expect(Array.from(link.classList)).toContain('symphony-ready');
+    expect(Array.from(link.classList)).not.toContain('symphony-migrate');
+    expect(link.onclick).toBeNull();
+    press(p, link);
+    expect(presses).toBe(0);
+    // and back, with a handler again
+    expect(injectMigrateButton(p.document, install, () => presses++)).toBe(link);
+    expect(link.textContent).toBe(WORDS.migrateButton);
+    expect(link.getAttribute('href')).toBe(install);
+    expect(link.getAttribute(`${MARK}-state`)).toBe('migrate');
+    expect(Array.from(link.classList)).toContain('symphony-migrate');
+    expect(Array.from(link.classList)).not.toContain('symphony-ready');
+    press(p, link);
+    expect(presses).toBe(1);
+    // one list item throughout
+    expect(p.document.querySelectorAll(`[${MARK}="migrate-item"]`).length).toBe(1);
+    expect(p.document.querySelector('ul[data-testid="repo-header-actions"]')!.children.length).toBe(4);
+  });
+
+  it('leaves a page without a header untouched', () => {
+    for (const p of [page('new-repo-classic'), blank()]) {
+      const before = html(p.document);
+      expect(injectReadyButton(p.document, board)).toBeUndefined();
+      expect(html(p.document)).toBe(before);
+    }
+  });
+
+  it('is taken off by removeInjected', () => {
+    const p = page('repo-react');
+    const before = html(p.document);
+    injectReadyButton(p.document, board);
+    expect(p.document.querySelectorAll(`[${MARK}]`).length).toBe(2);
+    removeInjected(p.document);
+    expect(html(p.document)).toBe(before);
   });
 });
 

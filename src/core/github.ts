@@ -1,7 +1,9 @@
 // What Symphony adds to a github.com page, and how it finds where. Every function takes the document
 // as an argument, so the tests run them against saved fixtures (test/fixtures) in linkedom, and every
 // one is idempotent: a second run finds its own mark (data-symphony) and does nothing more than
-// refresh what the one element already carries.
+// refresh what the one element already carries. The repository header's button is one element with
+// two states, Migrate to Symphony and Ready for Symphony, and a call for either state turns the one
+// element around.
 //
 // GitHub changes its markup without notice, so nothing here depends on one class name alone. A
 // button is found by what it is (a submit button that says "Create repository", in a form), the
@@ -135,35 +137,69 @@ export function injectCreateButton(doc: Document, onPress: (press: CreatePress) 
   return button;
 }
 
+/** on the header's link: which of its two states it is in, migrate (a call to action) or ready (a status) */
+const STATE = `${MARK}-state`;
+
 /**
  * The button "Migrate to Symphony" in the repository header's action list, beside Watch, Fork and
  * Star, as one more list item. It is a link that opens the App's install page in a new tab: no script
  * runs on that page and no permission is needed to open it. `onPress`, when given, runs at the click
  * (it records the migrate note) and the link's own action goes on whatever it did; a later call
- * refreshes the address and the handler both, so nothing accumulates on the one link.
+ * refreshes the address and the handler both, so nothing accumulates on the one link. The same link
+ * is the ready button below once the repository is adopted: a call in either direction turns the one
+ * element around, since GitHub may draw the About sidebar, where the sign of an adoption is read,
+ * after the header it sits beside.
  */
 export function injectMigrateButton(doc: Document, href: string, onPress?: () => void): HTMLAnchorElement | undefined {
+  const link = headerLink(doc);
+  if (!link) return undefined;
+  link.setAttribute(STATE, 'migrate');
+  link.classList.remove('symphony-ready');
+  link.classList.add('symphony-button', 'symphony-migrate');
+  link.textContent = WORDS.migrateButton;
+  link.href = href;
+  pressWith(link, onPress);
+  return link;
+}
+
+/**
+ * The same header button in its other state, "Ready for Symphony", on a repository that carries the
+ * topic the adoption sets (core/adopted.ts): a status rather than a call to action, which opens the
+ * repository's board in a new tab. It records nothing, so it carries no press handler, and a link
+ * that was the migrate button loses the handler it had.
+ */
+export function injectReadyButton(doc: Document, href: string): HTMLAnchorElement | undefined {
+  const link = headerLink(doc);
+  if (!link) return undefined;
+  link.setAttribute(STATE, 'ready');
+  link.classList.remove('symphony-migrate');
+  link.classList.add('symphony-button', 'symphony-ready');
+  link.textContent = WORDS.readyButton;
+  link.href = href;
+  pressWith(link);
+  return link;
+}
+
+/**
+ * The header's one Symphony link: the one already on the page, found by its mark, else a new list
+ * item at the end of the action list, dressed like the neighbouring button. Which state it is in,
+ * and so its words, its address and its handler, is the caller's to set every time; nothing here
+ * depends on the state it was in before.
+ */
+function headerLink(doc: Document): HTMLAnchorElement | undefined {
   const existing = doc.querySelector<HTMLAnchorElement>(`a[${MARK}="migrate"]`);
-  if (existing) {
-    existing.href = href;
-    pressWith(existing, onPress);
-    return existing;
-  }
+  if (existing) return existing;
   const actions = findHeaderActions(doc);
   if (!actions) return undefined;
   const item = doc.createElement('li');
   item.setAttribute(MARK, 'migrate-item');
   const link = doc.createElement('a');
   link.setAttribute(MARK, 'migrate');
-  link.href = href;
   link.target = '_blank';
   link.rel = 'noopener noreferrer';
-  pressWith(link, onPress);
   const neighbour = actions.querySelector('a.btn, button.btn, a[class*="ButtonBase"], button[class*="ButtonBase"]');
   if (neighbour) dressLike(link, neighbour, 'default');
   else link.className = 'btn btn-sm';
-  link.classList.add('symphony-button', 'symphony-migrate');
-  link.textContent = WORDS.migrateButton;
   item.append(link);
   actions.append(item);
   return link;

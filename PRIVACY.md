@@ -1,6 +1,6 @@
 # Symphony privacy statement
 
-Version 2, 2026-10-11. This text is also at https://openspineconsortium.com/symphony/privacy.html.
+Version 3, 2026-10-11. This text is also at https://openspineconsortium.com/symphony/privacy.html.
 
 Who makes Symphony: Gregory Schwing, trading as OpenSpineConsortium ("the developer"). Questions:
 the contact on https://openspineconsortium.com/symphony/.
@@ -54,6 +54,10 @@ On github.com only:
   address of the GitHub install page the button opens, where the account and the repository are then
   preselected and the owner/name travels as the link's `state`, which GitHub hands back to the form,
   and nowhere else.
+- On a repository's main page, the topic links in its About sidebar, read only to see whether the
+  topic `symphony` is among them, which the adoption sets on a repository: when it is, the header's
+  button reads **Ready for Symphony** and opens the repository's board instead of an install page.
+  Which topics a repository has is read for nothing else, and nothing of it is kept.
 - On the front door's form page, the page the Setup URL of both Apps sends you to, the page's own
   query string: whether GitHub put an installation's number in it (`installation_id`), which says an
   install just happened, and whether it holds the repository (`state`).
@@ -85,10 +89,11 @@ Symphony is for people who administer GitHub repositories. It is not directed at
 ## Changes
 
 A new version of this statement ships with the version of the extension it applies to, and the page
-at https://openspineconsortium.com/symphony/privacy.html is updated with it. Version 2 (extension
-1.1.0) added the second note, the second banner, the repository's tags and the form page's query
-string among what is read, and the two cases in which the page is moved; version 1 shipped with
-extension 1.0.0.
+at https://openspineconsortium.com/symphony/privacy.html is updated with it. Version 3 (extension
+1.2.0) added the About sidebar's topic links among what is read, for the one topic that marks an
+adopted repository; version 2 (extension 1.1.0) added the second note, the second banner, the
+repository's tags and the form page's query string among what is read, and the two cases in which
+the page is moved; version 1 shipped with extension 1.0.0.
 
 Symphony is not a GitHub or Anthropic product. "GitHub" is GitHub's mark; "Claude" and "Claude Code"
 are Anthropic's marks, used here to say what Symphony works with.

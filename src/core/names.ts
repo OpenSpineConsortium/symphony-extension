@@ -36,10 +36,24 @@ export const NEW_REPO_URL = 'https://github.com/new';
 /** the one host the content script runs on; nothing of the extension runs anywhere else */
 export const GITHUB_ORIGIN = 'https://github.com';
 
-/** the words on the page: the two buttons, the two banners and the popup, so a test can look for them */
+/**
+ * The repository topic an adopted repository carries: the adoption run sets it, and a person can set
+ * it by hand under Manage topics. GitHub shows a topic in the repository page's About sidebar as a
+ * link to /topics/<topic>, which is the one sign the extension reads to tell an adopted repository
+ * from one still to migrate (core/adopted.ts); it asks GitHub's API for nothing.
+ */
+export const TOPIC = 'symphony';
+
+/** the board the claim protocol keeps on the branch `board` of an adopted repository, which the ready button opens */
+export function boardUrl(owner: string, name: string): string {
+  return `${GITHUB_ORIGIN}/${owner}/${name}/blob/board/STATE.md`;
+}
+
+/** the words on the page: the two buttons (the header's in both its states), the two banners and the popup, so a test can look for them */
 export const WORDS = {
   createButton: 'Create Symphony repository',
   migrateButton: 'Migrate to Symphony',
+  readyButton: 'Ready for Symphony',
   bannerTitle: 'Finish setting up Symphony',
   bannerBody: 'Install the two Symphony Apps on this repository, one page each: a pull request with the template or the claim protocol lands within about two minutes.',
   bannerInstall: 'Install the Symphony Apps',

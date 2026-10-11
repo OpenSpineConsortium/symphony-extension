@@ -38,6 +38,11 @@ are Anthropic's marks, used here to say what Symphony works with.
   banner there, **SymphonyBoard is installed here already**, offers Symphony Setup's install with the
   same button. Whether the repository already has the Apps is not known from the page, and the
   extension does not ask GitHub's API.
+- On a repository that carries the topic `symphony`, which the adoption sets (and which anyone can
+  set by hand under Manage topics), the same header button reads **Ready for Symphony** instead and
+  opens the repository's board, `blob/board/STATE.md`, in a new tab: a status, drawn as an outline,
+  rather than a call to action, and no banner. The topic is read from the About sidebar's topic links
+  on the page itself (`src/core/adopted.ts`), never from GitHub's API.
 - A popup with three sentences, three links (the new-repository page, the form, the site) and the
   trademark sentence.
 
@@ -53,8 +58,9 @@ are Anthropic's marks, used here to say what Symphony works with.
 - No reading of cookies, tokens or forms, no API key, no credential of any kind anywhere, not even
   in an example. From the page it reads the typed repository name, when the person presses
   Symphony's own button; on a repository's main page, the meta tags that name the repository's owner
-  and the repository's id and owner/name; on the front door's form page, the query string
-  (`installation_id`, `state`); and on an installation's settings page, nothing but the address.
+  and the repository's id and owner/name, and the About sidebar's topic links, only to see whether
+  the topic `symphony` is there; on the front door's form page, the query string (`installation_id`,
+  `state`); and on an installation's settings page, nothing but the address.
 - One permission, `storage`, for two keys: the pending note (`symphony.pending`: name, owner when
   readable, timestamp), kept at most 15 minutes and removed when it is used or found expired; and
   the migrate note (`symphony.migrate`: owner and name, the two ids when readable, the step reached,
@@ -95,7 +101,8 @@ are the same, and the pull request brings the claim protocol alone. When Symphon
 account already, step 2 lands on that installation's settings page instead of an install page, where
 the banner **SymphonyBoard is installed here already** offers Symphony Setup's install; add the
 repository to the installation there if it is not in it, press **Install Symphony Setup**, and go on
-from step 3's install.
+from step 3's install. Once the adoption has set the topic `symphony` on the repository, its header
+button reads **Ready for Symphony** and opens the board.
 
 ## Layout
 
@@ -103,7 +110,8 @@ from step 3's install.
 wxt.config.ts                      the manifest: name, one content script, one popup, storage, the github.com host
 src/core/names.ts                  EVERY name and address: product, App slugs, front door, form, site; change them here
 src/core/route.ts                  which github.com page this is, from the URL (new repository, repository, the form, an installation's settings, other)
-src/core/github.ts                 finding GitHub's landmarks and adding the two buttons and the two banners, idempotently
+src/core/github.ts                 finding GitHub's landmarks and adding the two buttons and the two banners, idempotently; the header's button in its two states
+src/core/adopted.ts                whether the page's repository is adopted already: a link to the topic symphony in the About sidebar
 src/core/pending.ts                the pending note: set, match within 15 minutes, expire, taken once
 src/core/migrate.ts                the migrate note: set at Migrate, advanced after the first install, cleared at the form, 30 minutes; and what to do on the form page
 src/core/install.ts                the two install pages' addresses, with the account and the repository preselected and the state when the page says the ids
@@ -128,10 +136,10 @@ npm ci
 npm run typecheck
 npm test                 # after a build, test/hygiene.test.ts checks the package too
 npm run build            # -> .output/chrome-mv3
-npm run zip              # -> .output/symphony-1.1.0-chrome.zip, the file the store gets
+npm run zip              # -> .output/symphony-1.2.0-chrome.zip, the file the store gets
 ```
 
-The version is `version` in package.json, three integers (1.1.0), never fractional; WXT writes it
+The version is `version` in package.json, three integers (1.2.0), never fractional; WXT writes it
 into the manifest and the zip's name. `.github/workflows/ci.yml` runs the same five commands on
 Ubuntu with Node 22 and keeps the zip as the run's artifact; it uses no secret.
 
@@ -171,9 +179,11 @@ shape github.com served on 2026-10-11, trimmed from a logged-out read of a real 
 `a[data-testid="star-button"]`, and the owner's id and login and the repository's id and owner/name
 are in the octolytics meta tags). They prove that the injection finds its landmarks in those shapes,
 wears the neighbouring button's classes, does nothing twice, runs the one press handler it was last
-given, and leaves a page without the landmarks untouched. The new-repository page needs a login to
-read, so whether its live markup matches is checked by hand before every upload; so are the two
-install pages and the form, which the chain crosses.
+given, turns the header's button between Migrate and Ready, and leaves a page without the landmarks
+untouched. None of the fixtures carries an About sidebar, so the topic reader is tested against a
+sidebar snippet in GitHub's shape, written from memory, put into the fixture. The new-repository
+page needs a login to read, so whether its live markup matches is checked by hand before every
+upload; so are the two install pages, the form, which the chain crosses, and the sidebar.
 
 ## License
 

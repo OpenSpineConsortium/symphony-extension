@@ -7,9 +7,10 @@ repository page read on 2026-10-11), and only a person on the live pages can see
 markup today still has the landmarks (`src/core/github.ts`: a submit button that says "Create
 repository", the header's `ul[data-testid="repo-header-actions"]` or the list around
 `a[data-testid="star-button"]` or the older `ul.pagehead-actions`, the header those sit in, the
-`octolytics-dimension-user_id` and `octolytics-dimension-repository_id` meta tags, and a `main` on an
-installation's settings page), and whether GitHub's install pages still take the address's
-preselection and hand the `state` back to the form. The new-repository page is the one no logged-out
+`octolytics-dimension-user_id` and `octolytics-dimension-repository_id` meta tags, the About
+sidebar's topic links to `/topics/<topic>`, and a `main` on an installation's settings page), and
+whether GitHub's install pages still take the address's preselection and hand the `state` back to
+the form. The new-repository page is the one no logged-out
 read can check.
 
 ## Load unpacked
@@ -62,17 +63,26 @@ read can check.
    Issues tab and an organization's page: no Symphony button anywhere. Navigate from a repository's
    Code tab to Issues and back without a reload: the button is on Code and not on Issues. Open the
    form by hand, https://github.com/OpenSpineConsortium/symphony-start/issues/new?template=adopt.yml:
-   the page stays where it is, whatever you pressed before.
+   the page stays where it is, whatever you pressed before. Last, open a repository that has been
+   adopted (the pull request from `symphony/adopt` merged and the topic `symphony` set by the run),
+   or give a throwaway repository of yours the topic `symphony` by hand: on its main page, the gear
+   beside About, **Manage topics**, type `symphony`, save. Its header button now reads **Ready for
+   Symphony**, drawn as an orange outline with orange text on no background, in the same place and
+   shape as Migrate; press it: a new tab opens on `https://github.com/<owner>/<name>/blob/board/STATE.md`,
+   the board (a 404 on a repository whose adoption has not landed its board branch yet is GitHub's,
+   not the extension's). No banner appears on an adopted repository, whatever was pressed before.
+   Remove the topic again and reload: the button reads **Migrate to Symphony** once more.
 3. **The popup.** Press the toolbar button. Three sentences, three links, each opening in a new
    tab: **Create a Symphony repository** on https://github.com/new, **Open the form** on
    https://github.com/OpenSpineConsortium/symphony-start/issues/new?template=adopt.yml, **About
    Symphony** on https://openspineconsortium.com/symphony/; the trademark sentence; the Privacy
-   link on https://openspineconsortium.com/symphony/privacy.html; "Symphony 1.1.0".
+   link on https://openspineconsortium.com/symphony/privacy.html; "Symphony 1.2.0".
 
 While doing this, keep DevTools' Console open on a github.com page: nothing of Symphony's is
 printed, and no error names the extension. In DevTools' Network tab, filter by the extension's id:
 no request. The only page moves the extension made were the two on the form page in step 2, from
-the form to the Setup App's install page and, if GitHub left `state` out, to the form with it added.
+the form to the Setup App's install page and, if GitHub left `state` out, to the form with it added;
+the Ready button, like Migrate, is a plain link you pressed.
 
 ## If a button is missing
 
@@ -84,11 +94,11 @@ broken page.
 
 ## Just before uploading
 
-- `unzip -p .output/symphony-1.1.0-chrome.zip manifest.json` shows version 1.1.0, the name
+- `unzip -p .output/symphony-1.2.0-chrome.zip manifest.json` shows version 1.2.0, the name
   Symphony, `"permissions":["storage"]`, `"host_permissions":["https://github.com/*"]`, one content
   script matching `https://github.com/*`, and no `background`, `optional_permissions` or `key`.
 - `npm test` after the build passes with "the built package" tests run, not skipped.
-- https://openspineconsortium.com/symphony/privacy.html shows version 2 of PRIVACY.md;
+- https://openspineconsortium.com/symphony/privacy.html shows version 3 of PRIVACY.md;
   https://github.com/apps/symphonyboard and https://github.com/apps/symphony-setup answer.
 - The three images were looked at: `public/icon/128.png`, `store-assets/promo-440x280.png`,
   `store-assets/screenshot-1-1280x800.png`.

@@ -30,9 +30,9 @@ exact version and always uploads it; "Run workflow" with `upload` or
 ## 0. Before the first submission
 
 1. **The package.** In the repository, with Node 22: `npm ci`, `npm run typecheck`, `npm test`,
-   `npm run build`, `npm run zip`. The file is `.output/symphony-1.1.0-chrome.zip`. Confirm it is
-   what the texts describe: `unzip -p .output/symphony-1.1.0-chrome.zip manifest.json` shows
-   `"name":"Symphony"`, `"version":"1.1.0"`, the 120-character description of `LISTING.md`,
+   `npm run build`, `npm run zip`. The file is `.output/symphony-1.2.0-chrome.zip`. Confirm it is
+   what the texts describe: `unzip -p .output/symphony-1.2.0-chrome.zip manifest.json` shows
+   `"name":"Symphony"`, `"version":"1.2.0"`, the 120-character description of `LISTING.md`,
    `"permissions":["storage"]`, `"host_permissions":["https://github.com/*"]`, one entry under
    `content_scripts` whose `matches` is `["https://github.com/*"]`, `"homepage_url"` on
    openspineconsortium.com, and no `background`, no `optional_permissions`, no `key`. `npm test`
@@ -42,7 +42,7 @@ exact version and always uploads it; "Run workflow" with `upload` or
    written from memory of GitHub's markup, and only a person on the real pages can see whether the
    two buttons appear where they should.
 3. **The privacy page**, live and answering 200: https://openspineconsortium.com/symphony/privacy.html,
-   with the text of `PRIVACY.md` version 2. Reviewers open it; a 404 is a rejection. The product
+   with the text of `PRIVACY.md` version 3. Reviewers open it; a 404 is a rejection. The product
    page https://openspineconsortium.com/symphony/ should be live too, since the popup, the banner
    and the listing link to it.
 4. **The images**, looked at once each: `public/icon/128.png`, `store-assets/promo-440x280.png`,
@@ -64,7 +64,7 @@ exact version and always uploads it; "Run workflow" with `upload` or
 
 ## 1. The item
 
-1. **New item.** Dashboard, **Items**, **New item**, drag in `.output/symphony-1.1.0-chrome.zip`.
+1. **New item.** Dashboard, **Items**, **New item**, drag in `.output/symphony-1.2.0-chrome.zip`.
    The item's ID appears in the URL at once; it is the public link's ID once published.
 2. **Store listing** tab, from `LISTING.md`: the detailed description; Category **Developer
    Tools**; Language **English**; the store icon (`public/icon/128.png`); the small promo tile
@@ -87,10 +87,10 @@ exact version and always uploads it; "Run workflow" with `upload` or
 
 - **The host permission.** A permission on github.com puts the item into a closer review. The
   justification in `LISTING.md` says what the content script does on that one host (two buttons,
-  one banner, two meta tags read) and that nothing is sent anywhere; the privacy page says the
-  same; `test/hygiene.test.ts` is the proof a reviewer can read. If the reviewer asks for a
-  narrower match pattern, the answer is that the repository header exists on every
-  `https://github.com/<owner>/<repo>` and the new-repository page at `/new` and
+  two banners, two meta tags and the About sidebar's topic links read) and that nothing is sent
+  anywhere; the privacy page says the same; `test/hygiene.test.ts` is the proof a reviewer can
+  read. If the reviewer asks for a narrower match pattern, the answer is that the repository header
+  exists on every `https://github.com/<owner>/<repo>` and the new-repository page at `/new` and
   `/organizations/*/repositories/new`, which no narrower pattern covers.
 - **Single purpose.** One purpose, stated in `LISTING.md`: put the App's install flow one click
   away on github.com. The popup's three links serve the same purpose.
