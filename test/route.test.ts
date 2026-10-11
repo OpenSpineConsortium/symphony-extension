@@ -30,7 +30,7 @@ describe('classify', () => {
       '/octo-org/widgets/pulls/1',
       '/notifications/beta',
       '/marketplace/actions',
-      '/apps/symphony-dev',
+      '/apps/symphonyboard',
       '/login/oauth',
       '/explore/trending',
       '/search?q=x',

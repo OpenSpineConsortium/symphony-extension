@@ -81,7 +81,7 @@ describe('what the shipped source never contains', () => {
     const others = SHIPPED.filter((p) => !p.endsWith(path.join('core', 'names.ts')));
     for (const p of others) {
       const code = codeOf(read(p));
-      expect(/symphony-dev|symphony-setup|symphony-start|openspineconsortium\.com|github\.com\/apps\//i.test(code), rel(p)).toBe(false);
+      expect(/symphonyboard|symphony-setup|symphony-start|openspineconsortium\.com|github\.com\/apps\//i.test(code), rel(p)).toBe(false);
     }
   });
 });
@@ -120,11 +120,11 @@ describe('the names', () => {
   it('are the ones the repositories and the Apps are being renamed to', () => {
     expect(PRODUCT_NAME).toBe('Symphony');
     expect(VENDOR).toBe('OpenSpineConsortium');
-    expect(APP_SLUG).toBe('symphony-dev');
+    expect(APP_SLUG).toBe('symphonyboard');
     expect(SETUP_APP_SLUG).toBe('symphony-setup');
     expect(FRONT_DOOR_REPO).toBe('OpenSpineConsortium/symphony-start');
     expect(FORM_URL).toBe('https://github.com/OpenSpineConsortium/symphony-start/issues/new?template=adopt.yml');
-    expect(INSTALL_URL).toBe('https://github.com/apps/symphony-dev/installations/new');
+    expect(INSTALL_URL).toBe('https://github.com/apps/symphonyboard/installations/new');
     expect(SITE_URL).toBe('https://openspineconsortium.com/symphony/');
     expect(PRIVACY_URL).toBe('https://openspineconsortium.com/symphony/privacy.html');
   });
