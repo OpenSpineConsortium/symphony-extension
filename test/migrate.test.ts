@@ -129,6 +129,15 @@ describe('nextOnPicker', () => {
     expect(nextOnPicker({ owner: 'octo-org', name: 'widgets', step: 'board', at: T0 })).toEqual({ kind: 'go', href: `${SETUP_INSTALL_URL}?state=octo-org%2Fwidgets` });
   });
 
+  it('steps in on the permissions page too when it arrived without the repository, and leaves the preselected page alone', () => {
+    // GitHub's own query on the page the first install lands on: nothing about a repository
+    expect(nextOnPicker(FULL, '?installation_id=70&setup_action=install&state=octo-org%2Fwidgets')).toEqual({ kind: 'go', href: PRESELECTED });
+    expect(nextOnPicker(FULL, '?target_id=98765')).toEqual({ kind: 'go', href: PRESELECTED });
+    // the preselected page itself, as GitHub writes it and as the extension writes it
+    expect(nextOnPicker(FULL, '?target_id=98765&suggested_target_id=98765&repository_ids%5B%5D=555001&state=octo-org%2Fwidgets')).toEqual({ kind: 'nothing' });
+    expect(nextOnPicker(FULL, '?repository_ids[]=555001')).toEqual({ kind: 'nothing' });
+  });
+
   it('does nothing without a note, or once the note is past the first install', () => {
     expect(nextOnPicker(undefined)).toEqual({ kind: 'nothing' });
     expect(nextOnPicker({ ...FULL, step: 'setup' })).toEqual({ kind: 'nothing' });

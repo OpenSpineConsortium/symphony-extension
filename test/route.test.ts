@@ -52,10 +52,14 @@ describe('classify', () => {
     expect(classify(`/apps/${SETUP_APP_SLUG.toUpperCase()}/installations/new`)).toEqual({ kind: 'setup-app-picker' });
   });
 
-  it('reads neither the preselected page the picker is sent to, nor the App\'s own page, nor SymphonyBoard\'s picker as it', () => {
+  it('knows Symphony Setup\'s permissions page too, where GitHub goes straight for an account with no organization to choose', () => {
+    expect(classify(`/apps/${SETUP_APP_SLUG}/installations/new/permissions`)).toEqual({ kind: 'setup-app-permissions' });
+    expect(classify(`/apps/${SETUP_APP_SLUG}/installations/new/permissions/`)).toEqual({ kind: 'setup-app-permissions' });
+    expect(classify(`/apps/${SETUP_APP_SLUG.toUpperCase()}/installations/new/permissions`)).toEqual({ kind: 'setup-app-permissions' });
+  });
+
+  it('reads neither the App\'s own page, nor SymphonyBoard\'s install pages, nor a neighbour as it', () => {
     for (const path of [
-      `/apps/${SETUP_APP_SLUG}/installations/new/permissions`,
-      `/apps/${SETUP_APP_SLUG}/installations/new/permissions/`,
       `/apps/${SETUP_APP_SLUG}/installations`,
       `/apps/${SETUP_APP_SLUG}/installations/`,
       `/apps/${SETUP_APP_SLUG}`,

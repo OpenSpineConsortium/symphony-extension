@@ -13,8 +13,9 @@
 // (core/migrate.ts).
 //
 // The extension navigates the page in three cases and no other, all with location.replace. On
-// Symphony Setup's account-picker page, in onPicker below: SymphonyBoard's Setup URL is that page,
-// so GitHub itself sends the person there after the first install, but the picker knows nothing of
+// Symphony Setup's install page (its account picker, or the permissions page GitHub goes straight to
+// for an account with no organization to choose), in onPicker below: SymphonyBoard's Setup URL is
+// that page, so GitHub itself sends the person there after the first install, but the page knows nothing of
 // the repository just installed on, and the extension sends it on to the same App's install page
 // with the account and the repository from the migrate note preselected, because an adoption needs
 // both Apps on the one repository and a picker left alone lands on "All repositories". On the front
@@ -77,7 +78,7 @@ function start(doc: Document): void {
         const route = classify(path);
         if (route.kind === 'repository') void checkPending(route);
         else if (route.kind === 'front-door-form') void onForm();
-        else if (route.kind === 'setup-app-picker') void onPicker();
+        else if (route.kind === 'setup-app-picker' || route.kind === 'setup-app-permissions') void onPicker();
         else if (route.kind === 'installation-settings') void checkMigration();
       }
       const route = classify(path);
@@ -140,7 +141,7 @@ function start(doc: Document): void {
   /** Symphony Setup's account picker, where SymphonyBoard's install lands: on to the preselected page (the header comment says why) */
   const onPicker = async (): Promise<void> => {
     try {
-      const next = nextOnPicker(await readMigration(local, Date.now()));
+      const next = nextOnPicker(await readMigration(local, Date.now()), location.search);
       if (next.kind === 'go') {
         // the note first, so the picker reached again finds step setup and stays put
         await advanceMigration(local, Date.now());

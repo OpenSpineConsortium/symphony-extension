@@ -144,9 +144,14 @@ export type PickerAction = Extract<FormAction, { kind: 'nothing' } | { kind: 'go
  * the account and the repository preselected, the page the form used to send it to. The caller
  * advances the note before it goes, so a second landing on the picker, for instance when GitHub
  * sends the person back to it, finds step setup and does nothing: the chain cannot loop. Without a
- * note, or with one past step board, the picker is left as GitHub drew it.
+ * note, or with one past step board, the picker is left as GitHub drew it. The same holds on the
+ * App's permissions page, where GitHub goes straight for an account with no organization to
+ * choose, as long as its query names no repository (repository_ids[]): a page that names one is
+ * the preselected page itself, and is left alone.
  */
-export function nextOnPicker(note: Migration | undefined): PickerAction {
+export function nextOnPicker(note: Migration | undefined, search = ''): PickerAction {
   if (!note || note.step !== 'board') return { kind: 'nothing' };
+  // the permissions page that already names a repository is the preselected page itself: done
+  if (new URLSearchParams(search).has('repository_ids[]')) return { kind: 'nothing' };
   return { kind: 'go', href: setupInstallUrl(migrationTarget(note)) };
 }

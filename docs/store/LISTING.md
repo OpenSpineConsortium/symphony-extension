@@ -1,6 +1,6 @@
 # Store listing texts
 
-The exact texts to paste into the Chrome Web Store developer dashboard for Symphony 1.3.0, and the
+The exact texts to paste into the Chrome Web Store developer dashboard for Symphony 1.4.0, and the
 answers to its questions. `SUBMISSION.md` beside this file says where each goes, in the dashboard's
 order; `TEST_BEFORE_UPLOAD.md` is the hand test that comes before the upload. Every name and address
 below is the one in `src/core/names.ts`; when a name changes there, change it here too.
@@ -21,10 +21,10 @@ and `test/hygiene.test.ts`):
   repository's main page, the meta tags naming the owner's login and account id and the repository's
   id and owner/name, and the About sidebar's topic links, only to see whether the topic `symphony`
   is there; on the front door's form page, the query string (`installation_id`, `state`); on
-  Symphony Setup's account-picker page and on an installation's settings page, nothing but the
-  address.
-- The extension moves the page in three cases only: from the second App's account-picker page, where
-  the first App's install lands, to the same App's install page with the repository preselected; and,
+  Symphony Setup's install page and on an installation's settings page, nothing but the address
+  and, on the install page, whether its query names a repository.
+- The extension moves the page in three cases only: from the second App's install page, where the first
+  App's install lands without the repository, to the same page with the repository preselected; and,
   on the front door's form page, on to the second App's install page when the first install landed
   there instead, and to the same form page with the repository added when GitHub left it out of the
   address.
@@ -109,7 +109,7 @@ No remote code. No eval, no new Function, no fetched script, no runtime download
 | User activity | No |
 | Website content | No |
 | Certifications (Chrome's three) | Tick all three: I do not sell or transfer user data to third parties outside the approved use cases; I do not use or transfer user data for purposes unrelated to the item's single purpose; I do not use or transfer user data to determine creditworthiness or for lending purposes. |
-| Privacy policy URL | https://openspineconsortium.com/symphony/privacy.html (the text of PRIVACY.md, version 4) |
+| Privacy policy URL | https://openspineconsortium.com/symphony/privacy.html (the text of PRIVACY.md, version 5) |
 
 If the dashboard asks whether the extension collects or transmits any user data: **No.** The two
 stored values are a repository name the user typed, kept on their own device for at most 15
@@ -125,7 +125,7 @@ minutes; neither is ever transmitted.
 | Privacy policy | https://openspineconsortium.com/symphony/privacy.html |
 | Official URL | https://openspineconsortium.com/ once the site is verified in Google Search Console under the developer account's Google account; empty until then |
 
-The privacy page must answer 200 with version 4 of PRIVACY.md before the upload: reviewers open it,
+The privacy page must answer 200 with version 5 of PRIVACY.md before the upload: reviewers open it,
 and a 404 there is a rejection.
 
 ## Images

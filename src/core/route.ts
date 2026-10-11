@@ -12,6 +12,8 @@ export type Route =
   | { kind: 'installation-settings' }
   /** Symphony Setup's account-picker page, where SymphonyBoard's Setup URL lands an installer */
   | { kind: 'setup-app-picker' }
+  /** the same App's permissions page, where GitHub goes straight for an account with no organization to choose, and where the picker is sent on to */
+  | { kind: 'setup-app-permissions' }
   | { kind: 'other' };
 
 /**
@@ -40,6 +42,7 @@ export function classify(pathname: string): Route {
   if (isFrontDoorForm(segments)) return { kind: 'front-door-form' };
   if (isInstallationSettings(segments)) return { kind: 'installation-settings' };
   if (isSetupAppPicker(segments)) return { kind: 'setup-app-picker' };
+  if (isSetupAppPermissions(segments)) return { kind: 'setup-app-permissions' };
   if (segments.length !== 2) return { kind: 'other' };
   const [owner, raw] = segments as [string, string];
   // GitHub serves /owner/name.git nowhere, but a pasted clone address can land on it; strip to be safe
@@ -76,4 +79,14 @@ function isInstallationSettings(segments: string[]): boolean {
 function isSetupAppPicker(segments: string[]): boolean {
   if (segments.length !== 4 || segments[0] !== 'apps' || segments[2] !== 'installations' || segments[3] !== 'new') return false;
   return segments[1]!.toLowerCase() === SETUP_APP_SLUG.toLowerCase();
+}
+
+/**
+ * /apps/<setup slug>/installations/new/permissions: GitHub skips the picker and lands here when the
+ * account has no organization to choose, and the picker is sent on to this page too; whether it
+ * still needs the repository is in its query (core/migrate.ts), not in its path.
+ */
+function isSetupAppPermissions(segments: string[]): boolean {
+  if (segments.length !== 5 || segments[4] !== 'permissions') return false;
+  return isSetupAppPicker(segments.slice(0, 4));
 }

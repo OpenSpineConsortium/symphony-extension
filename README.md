@@ -63,7 +63,8 @@ are Anthropic's marks, used here to say what Symphony works with.
   Symphony's own button; on a repository's main page, the meta tags that name the repository's owner
   and the repository's id and owner/name, and the About sidebar's topic links, only to see whether
   the topic `symphony` is there; on the front door's form page, the query string (`installation_id`,
-  `state`); and on Symphony Setup's account-picker page and on an installation's settings page,
+  `state`); on Symphony Setup's install page (the account picker, or the permissions page), its
+  address and whether its query names a repository; and on an installation's settings page,
   nothing but the address.
 - One permission, `storage`, for two keys: the pending note (`symphony.pending`: name, owner when
   readable, timestamp), kept at most 15 minutes and removed when it is used or found expired; and
@@ -72,8 +73,9 @@ are Anthropic's marks, used here to say what Symphony works with.
   pressed, advanced after the first install, removed when the form is reached after the second
   install or found expired.
 - Three navigations and no other, all `location.replace` (`src/entrypoints/github.content/index.ts`
-  says why): from Symphony Setup's account-picker page, where SymphonyBoard's install lands, to the
-  same App's install page with the noted repository preselected; and, on the front door's form page,
+  says why): from Symphony Setup's install page, where SymphonyBoard's install lands without the
+  repository (the account picker, or the permissions page GitHub goes straight to for an account
+  with no organization to choose), to the same page with the noted repository preselected; and, on the front door's form page,
   on to Symphony Setup's install page when the first install landed there instead, and to the same
   form page with the repository added when GitHub left the `state` out. Everywhere else the person's
   own click on a link is the only navigation, and nothing is pressed or submitted for them.
@@ -114,11 +116,11 @@ button reads **Ready for Symphony** and opens the board.
 ```
 wxt.config.ts                      the manifest: name, one content script, one popup, storage, the github.com host
 src/core/names.ts                  EVERY name and address: product, App slugs, front door, form, site; change them here
-src/core/route.ts                  which github.com page this is, from the URL (new repository, repository, the form, Symphony Setup's account picker, an installation's settings, other)
+src/core/route.ts                  which github.com page this is, from the URL (new repository, repository, the form, Symphony Setup's install pages, an installation's settings, other)
 src/core/github.ts                 finding GitHub's landmarks and adding the two buttons and the two banners, idempotently; the header's button in its two states
 src/core/adopted.ts                whether the page's repository is adopted already: a link to the topic symphony in the About sidebar
 src/core/pending.ts                the pending note: set, match within 15 minutes, expire, taken once
-src/core/migrate.ts                the migrate note: set at Migrate, advanced after the first install, cleared at the form, 30 minutes; and what to do on the picker and on the form page
+src/core/migrate.ts                the migrate note: set at Migrate, advanced after the first install, cleared at the form, 30 minutes; and what to do on Symphony Setup's install page and on the form page
 src/core/install.ts                the two install pages' addresses, with the account and the repository preselected and the state when the page says the ids
 src/ext/storage.ts                 browser.storage.local as the small store core/pending.ts and core/migrate.ts expect
 src/entrypoints/github.content/    the content script (index.ts) and its few styles (style.css)
@@ -141,10 +143,10 @@ npm ci
 npm run typecheck
 npm test                 # after a build, test/hygiene.test.ts checks the package too
 npm run build            # -> .output/chrome-mv3
-npm run zip              # -> .output/symphony-1.3.0-chrome.zip, the file the store gets
+npm run zip              # -> .output/symphony-1.4.0-chrome.zip, the file the store gets
 ```
 
-The version is `version` in package.json, three integers (1.3.0), never fractional; WXT writes it
+The version is `version` in package.json, three integers (1.4.0), never fractional; WXT writes it
 into the manifest and the zip's name. `.github/workflows/ci.yml` runs the same five commands on
 Ubuntu with Node 22 and keeps the zip as the run's artifact; it uses no secret.
 
@@ -188,7 +190,7 @@ given, turns the header's button between Migrate and Ready, and leaves a page wi
 untouched. None of the fixtures carries an About sidebar, so the topic reader is tested against a
 sidebar snippet in GitHub's shape, written from memory, put into the fixture. The new-repository
 page needs a login to read, so whether its live markup matches is checked by hand before every
-upload; so are the two install pages, the form, which the chain crosses, the account picker GitHub
+upload; so are the two install pages, the form, which the chain crosses, the install page GitHub
 sends the first install on to, and the sidebar.
 
 ## License
