@@ -30,10 +30,13 @@ are Anthropic's marks, used here to say what Symphony works with.
   (`.../installations/new/permissions?target_id=<id>&suggested_target_id=<id>&repository_ids[]=<id>`),
   so the install does not land on "All repositories", and the repository's owner/name rides in the
   link's `state`, which GitHub hands back to the form; without the ids, the plain install page, which
-  asks for the account, with the `state` alone. After the first install lands on the form, the
-  extension takes you on to Symphony Setup's install page, preselected the same way, since an
-  adoption needs both Apps and the front door refuses a request without the second; after that
-  install the form opens with its Repository field filled in. When SymphonyBoard was installed on the
+  asks for the account, with the `state` alone. After the first install, GitHub itself sends you to
+  Symphony Setup's install page (SymphonyBoard's Setup URL is that page), which would ask for the
+  account and the repository again; the extension turns it into the same page preselected the same
+  way, since an adoption needs both Apps on the one repository and the front door refuses a request
+  without the second; after that install the form opens with its Repository field filled in. (An
+  install that lands on the form instead, from a SymphonyBoard whose Setup URL still names the form,
+  is taken on from there the same way.) When SymphonyBoard was installed on the
   account already, GitHub lands the first press on that installation's settings page instead, and a
   banner there, **SymphonyBoard is installed here already**, offers Symphony Setup's install with the
   same button. Whether the repository already has the Apps is not known from the page, and the
@@ -60,18 +63,20 @@ are Anthropic's marks, used here to say what Symphony works with.
   Symphony's own button; on a repository's main page, the meta tags that name the repository's owner
   and the repository's id and owner/name, and the About sidebar's topic links, only to see whether
   the topic `symphony` is there; on the front door's form page, the query string (`installation_id`,
-  `state`); and on an installation's settings page, nothing but the address.
+  `state`); and on Symphony Setup's account-picker page and on an installation's settings page,
+  nothing but the address.
 - One permission, `storage`, for two keys: the pending note (`symphony.pending`: name, owner when
   readable, timestamp), kept at most 15 minutes and removed when it is used or found expired; and
   the migrate note (`symphony.migrate`: owner and name, the two ids when readable, the step reached,
   timestamp), kept at most 30 minutes, written when Migrate or the banner's install button is
-  pressed, advanced after the first install, removed when the form is reached the second time or
-  found expired.
-- Two navigations and no other, both on the front door's form page, both `location.replace`
-  (`src/entrypoints/github.content/index.ts` says why): on to Symphony Setup's install page once the
-  first install has landed there, and to the same form page with the repository added when GitHub
-  left the `state` out. Everywhere else the person's own click on a link is the only navigation, and
-  nothing is pressed or submitted for them.
+  pressed, advanced after the first install, removed when the form is reached after the second
+  install or found expired.
+- Three navigations and no other, all `location.replace` (`src/entrypoints/github.content/index.ts`
+  says why): from Symphony Setup's account-picker page, where SymphonyBoard's install lands, to the
+  same App's install page with the noted repository preselected; and, on the front door's form page,
+  on to Symphony Setup's install page when the first install landed there instead, and to the same
+  form page with the repository added when GitHub left the `state` out. Everywhere else the person's
+  own click on a link is the only navigation, and nothing is pressed or submitted for them.
 - A selector that finds nothing leaves the page untouched: a page without a Symphony button is the
   fallback, never a broken page (`src/core/github.ts`).
 
@@ -84,12 +89,12 @@ are Anthropic's marks, used here to say what Symphony works with.
 2. The banner **Finish setting up Symphony** appears at the top. Press **Install the Symphony
    Apps**: SymphonyBoard's install page opens in a new tab with your account and the repository you
    just made preselected. Press Install.
-3. GitHub sends you to the form on the front door repository (the App's Setup URL); the extension
-   notes that the first install is done and takes you straight on to Symphony Setup's install page,
-   preselected the same way. Press Install again.
-4. GitHub sends you to the form once more, now with your installation's number and the repository
-   filled in (the extension adds the repository to the address if GitHub left it out). Press
-   **Create**.
+3. GitHub itself sends you to Symphony Setup's install page (SymphonyBoard's Setup URL), which asks
+   for the account; the extension notes that the first install is done and turns that page into the
+   one with your account and the repository preselected, the same way. Press Install again.
+4. GitHub sends you to the form on the front door repository (Symphony Setup's Setup URL), with your
+   installation's number and the repository filled in (the extension adds the repository to the
+   address if GitHub left it out). Press **Create**.
 5. Within about two minutes a pull request opens in your repository, from the branch
    `symphony/adopt`, with the whole template (an empty repository) or the claim protocol (a
    repository with files). Review and merge it. The front door's README has the kinds, the sweep
@@ -109,11 +114,11 @@ button reads **Ready for Symphony** and opens the board.
 ```
 wxt.config.ts                      the manifest: name, one content script, one popup, storage, the github.com host
 src/core/names.ts                  EVERY name and address: product, App slugs, front door, form, site; change them here
-src/core/route.ts                  which github.com page this is, from the URL (new repository, repository, the form, an installation's settings, other)
+src/core/route.ts                  which github.com page this is, from the URL (new repository, repository, the form, Symphony Setup's account picker, an installation's settings, other)
 src/core/github.ts                 finding GitHub's landmarks and adding the two buttons and the two banners, idempotently; the header's button in its two states
 src/core/adopted.ts                whether the page's repository is adopted already: a link to the topic symphony in the About sidebar
 src/core/pending.ts                the pending note: set, match within 15 minutes, expire, taken once
-src/core/migrate.ts                the migrate note: set at Migrate, advanced after the first install, cleared at the form, 30 minutes; and what to do on the form page
+src/core/migrate.ts                the migrate note: set at Migrate, advanced after the first install, cleared at the form, 30 minutes; and what to do on the picker and on the form page
 src/core/install.ts                the two install pages' addresses, with the account and the repository preselected and the state when the page says the ids
 src/ext/storage.ts                 browser.storage.local as the small store core/pending.ts and core/migrate.ts expect
 src/entrypoints/github.content/    the content script (index.ts) and its few styles (style.css)
@@ -136,10 +141,10 @@ npm ci
 npm run typecheck
 npm test                 # after a build, test/hygiene.test.ts checks the package too
 npm run build            # -> .output/chrome-mv3
-npm run zip              # -> .output/symphony-1.2.0-chrome.zip, the file the store gets
+npm run zip              # -> .output/symphony-1.3.0-chrome.zip, the file the store gets
 ```
 
-The version is `version` in package.json, three integers (1.2.0), never fractional; WXT writes it
+The version is `version` in package.json, three integers (1.3.0), never fractional; WXT writes it
 into the manifest and the zip's name. `.github/workflows/ci.yml` runs the same five commands on
 Ubuntu with Node 22 and keeps the zip as the run's artifact; it uses no secret.
 
@@ -183,7 +188,8 @@ given, turns the header's button between Migrate and Ready, and leaves a page wi
 untouched. None of the fixtures carries an About sidebar, so the topic reader is tested against a
 sidebar snippet in GitHub's shape, written from memory, put into the fixture. The new-repository
 page needs a login to read, so whether its live markup matches is checked by hand before every
-upload; so are the two install pages, the form, which the chain crosses, and the sidebar.
+upload; so are the two install pages, the form, which the chain crosses, the account picker GitHub
+sends the first install on to, and the sidebar.
 
 ## License
 

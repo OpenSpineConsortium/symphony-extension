@@ -1,15 +1,17 @@
 // Which github.com page the content script is on, from the URL alone. The script runs on every
 // github.com page (one match pattern, one host), so it must first decide whether the page is one of
-// the five it touches; everything else is left exactly as GitHub drew it.
-import { FRONT_DOOR_REPO } from './names';
+// the six it touches; everything else is left exactly as GitHub drew it.
+import { FRONT_DOOR_REPO, SETUP_APP_SLUG } from './names';
 
 export type Route =
   | { kind: 'new-repository' }
   | { kind: 'repository'; owner: string; name: string }
-  /** the front door's new-issue page, where both Apps' Setup URL lands an installer */
+  /** the front door's new-issue page, where Symphony Setup's Setup URL lands an installer (and SymphonyBoard's, where it still names the form) */
   | { kind: 'front-door-form' }
   /** one installation's settings page, where GitHub lands an install of an App an account has already */
   | { kind: 'installation-settings' }
+  /** Symphony Setup's account-picker page, where SymphonyBoard's Setup URL lands an installer */
+  | { kind: 'setup-app-picker' }
   | { kind: 'other' };
 
 /**
@@ -37,6 +39,7 @@ export function classify(pathname: string): Route {
   if (isNewRepositoryPage(segments)) return { kind: 'new-repository' };
   if (isFrontDoorForm(segments)) return { kind: 'front-door-form' };
   if (isInstallationSettings(segments)) return { kind: 'installation-settings' };
+  if (isSetupAppPicker(segments)) return { kind: 'setup-app-picker' };
   if (segments.length !== 2) return { kind: 'other' };
   const [owner, raw] = segments as [string, string];
   // GitHub serves /owner/name.git nowhere, but a pasted clone address can land on it; strip to be safe
@@ -62,4 +65,15 @@ function isInstallationSettings(segments: string[]): boolean {
   if (segments.length === 3) return segments[0] === 'settings' && segments[1] === 'installations' && DIGITS.test(segments[2]!);
   if (segments.length !== 5) return false;
   return segments[0] === 'organizations' && NAME.test(segments[1]!) && segments[2] === 'settings' && segments[3] === 'installations' && DIGITS.test(segments[4]!);
+}
+
+/**
+ * /apps/<setup app>/installations/new, the slug compared as GitHub does, without regard to case, and
+ * that page alone: the preselected page under it (/permissions) is where the picker is sent on to, so
+ * reading it as the picker would send it on to itself; SymphonyBoard's picker and the App's own page
+ * are nothing to the extension.
+ */
+function isSetupAppPicker(segments: string[]): boolean {
+  if (segments.length !== 4 || segments[0] !== 'apps' || segments[2] !== 'installations' || segments[3] !== 'new') return false;
+  return segments[1]!.toLowerCase() === SETUP_APP_SLUG.toLowerCase();
 }

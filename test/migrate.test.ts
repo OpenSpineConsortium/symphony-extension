@@ -1,10 +1,12 @@
 // The migrate note: written when Migrate or the banner's install button is pressed, advanced when the
-// first install lands on the form, cleared when the second does, expired after 30 minutes; and the
-// decision the content script takes on the form page from the note and the page's query string. The
-// storage is a map in memory: the functions take their clock and their store as arguments.
+// first install lands on Symphony Setup's account picker (or on the form, where an installation lands
+// when SymphonyBoard's Setup URL still names it), cleared when the second install reaches the form,
+// expired after 30 minutes; and the decisions the content script takes on the picker from the note
+// alone and on the form page from the note and the page's query string. The storage is a map in
+// memory: the functions take their clock and their store as arguments.
 import { describe, expect, it } from 'vitest';
 import { setupInstallUrl } from '../src/core/install';
-import { advanceMigration, asMigration, clearMigration, isExpiredMigration, MIGRATE_KEY, MIGRATE_TTL_MS, migrationFor, migrationTarget, nextOnForm, readMigration, recordMigration, type Migration } from '../src/core/migrate';
+import { advanceMigration, asMigration, clearMigration, isExpiredMigration, MIGRATE_KEY, MIGRATE_TTL_MS, migrationFor, migrationTarget, nextOnForm, nextOnPicker, readMigration, recordMigration, type Migration } from '../src/core/migrate';
 import { FORM_PAGE_URL, SETUP_INSTALL_URL } from '../src/core/names';
 import type { KV } from '../src/core/pending';
 
@@ -29,6 +31,10 @@ const MINUTE = 60_000;
 const REPO = { owner: 'octo-org', name: 'widgets' };
 const IDS = { ownerId: '98765', repositoryId: '555001' };
 const FULL: Migration = { owner: 'octo-org', name: 'widgets', ownerId: '98765', repositoryId: '555001', step: 'board', at: T0 };
+/** the query GitHub appends to a Setup URL after an install */
+const LANDING = '?template=adopt.yml&installation_id=12345&setup_action=install';
+/** Symphony Setup's install page for FULL: the account and the repository preselected, the state carried */
+const PRESELECTED = `${SETUP_INSTALL_URL}/permissions?target_id=98765&suggested_target_id=98765&repository_ids[]=555001&state=octo-org%2Fwidgets`;
 
 describe('the migrate note', () => {
   it('is made from the repository and the ids the page gave, at step board', () => {
@@ -113,8 +119,46 @@ describe('the migrate note', () => {
   });
 });
 
+describe('nextOnPicker', () => {
+  it('sends the picker on to Symphony Setup\'s preselected page when SymphonyBoard has just been installed', () => {
+    expect(nextOnPicker(FULL)).toEqual({ kind: 'go', href: PRESELECTED });
+    expect(nextOnPicker(FULL)).toEqual({ kind: 'go', href: setupInstallUrl(migrationTarget(FULL)) });
+    // the same step the form took before the chain was made on GitHub's side, so the two agree
+    expect(nextOnPicker(FULL)).toEqual(nextOnForm(FULL, LANDING));
+    // a note without ids has no preselected page: the plain page with the state, which GitHub carries on to the form
+    expect(nextOnPicker({ owner: 'octo-org', name: 'widgets', step: 'board', at: T0 })).toEqual({ kind: 'go', href: `${SETUP_INSTALL_URL}?state=octo-org%2Fwidgets` });
+  });
+
+  it('does nothing without a note, or once the note is past the first install', () => {
+    expect(nextOnPicker(undefined)).toEqual({ kind: 'nothing' });
+    expect(nextOnPicker({ ...FULL, step: 'setup' })).toEqual({ kind: 'nothing' });
+    expect(nextOnPicker({ owner: 'o', name: 'n', step: 'setup', at: T0 })).toEqual({ kind: 'nothing' });
+  });
+
+  it('cannot loop: the content script advances the note before it goes, and a second landing on the picker finds step setup', async () => {
+    const kv = memory();
+    await recordMigration(kv, FULL);
+    expect(nextOnPicker(await readMigration(kv, T0 + MINUTE))).toEqual({ kind: 'go', href: PRESELECTED });
+    await advanceMigration(kv, T0 + MINUTE);
+    // GitHub sends the person back to the picker, or the preselected page loads again: nothing happens
+    expect(nextOnPicker(await readMigration(kv, T0 + 2 * MINUTE))).toEqual({ kind: 'nothing' });
+    expect(nextOnPicker(await readMigration(kv, T0 + 3 * MINUTE))).toEqual({ kind: 'nothing' });
+    // and the form, reached after the second install, still ends the chain, or adds the state first
+    expect(nextOnForm(await readMigration(kv, T0 + 4 * MINUTE), `${LANDING}&state=octo-org%2Fwidgets`)).toEqual({ kind: 'done' });
+    expect(nextOnForm(await readMigration(kv, T0 + 4 * MINUTE), LANDING)).toEqual({ kind: 'add-state', href: `${FORM_PAGE_URL}${LANDING}&state=octo-org%2Fwidgets` });
+  });
+
+  it('is the fallback\'s twin: an installation that lands on the form instead of the picker takes the same step there', async () => {
+    const kv = memory();
+    await recordMigration(kv, FULL);
+    expect(nextOnForm(await readMigration(kv, T0 + MINUTE), LANDING)).toEqual({ kind: 'go', href: PRESELECTED });
+    await advanceMigration(kv, T0 + MINUTE);
+    expect(nextOnPicker(await readMigration(kv, T0 + 2 * MINUTE))).toEqual({ kind: 'nothing' });
+  });
+});
+
 describe('nextOnForm', () => {
-  const landing = '?template=adopt.yml&installation_id=12345&setup_action=install';
+  const landing = LANDING;
 
   it('does nothing without a note, or on a form page nobody was sent to by an install', () => {
     expect(nextOnForm(undefined, landing)).toEqual({ kind: 'nothing' });

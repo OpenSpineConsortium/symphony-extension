@@ -18,7 +18,7 @@ export const SETUP_APP_SLUG = 'symphony-setup';
 /** the front door repository, whose issue form starts the adoption */
 export const FRONT_DOOR_REPO = 'OpenSpineConsortium/symphony-start';
 
-/** the front door's new-issue page, and the form on it: the page both Apps' Setup URL sends an installer to */
+/** the front door's new-issue page, and the form on it: the page Symphony Setup's Setup URL sends an installer to */
 export const FORM_PAGE_URL = `https://github.com/${FRONT_DOOR_REPO}/issues/new`;
 export const FORM_URL = `${FORM_PAGE_URL}?template=adopt.yml`;
 
@@ -26,7 +26,7 @@ export const FORM_URL = `${FORM_PAGE_URL}?template=adopt.yml`;
 export const SITE_URL = 'https://openspineconsortium.com/symphony/';
 export const PRIVACY_URL = `${SITE_URL}privacy.html`;
 
-/** GitHub's own pages for installing the two Apps: the first is what the two buttons open, the second what follows it */
+/** GitHub's own pages for installing the two Apps: the first is what the two buttons open, the second what follows it (it is also SymphonyBoard's Setup URL, so GitHub itself sends an installer on to it) */
 export const INSTALL_URL = `https://github.com/apps/${APP_SLUG}/installations/new`;
 export const SETUP_INSTALL_URL = `https://github.com/apps/${SETUP_APP_SLUG}/installations/new`;
 

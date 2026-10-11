@@ -1,9 +1,10 @@
 // Which pages the content script touches: the two new-repository pages, a repository's main page, the
-// front door's form page, an installation's settings page, and nothing else. The reserved list matters
-// most: a GitHub page of two segments that is not a repository (the user's own settings, an
-// organization's page) must never get a button.
+// front door's form page, an installation's settings page, Symphony Setup's account-picker page, and
+// nothing else. The reserved list matters most: a GitHub page of two segments that is not a repository
+// (the user's own settings, an organization's page) must never get a button; and the picker must be
+// that one page, since the page it is sent on to lies under it.
 import { describe, expect, it } from 'vitest';
-import { FRONT_DOOR_REPO } from '../src/core/names';
+import { APP_SLUG, FRONT_DOOR_REPO, SETUP_APP_SLUG } from '../src/core/names';
 import { classify } from '../src/core/route';
 
 describe('classify', () => {
@@ -40,6 +41,31 @@ describe('classify', () => {
       '/organizations/octo-org/settings/installations/abc',
       '/organizations/-bad/settings/installations/12345',
       '/organizations/settings/installations/12345',
+    ]) {
+      expect(classify(path), path).toEqual({ kind: 'other' });
+    }
+  });
+
+  it('knows Symphony Setup\'s account-picker page, where SymphonyBoard\'s install lands, whatever the case of the slug', () => {
+    expect(classify(`/apps/${SETUP_APP_SLUG}/installations/new`)).toEqual({ kind: 'setup-app-picker' });
+    expect(classify(`/apps/${SETUP_APP_SLUG}/installations/new/`)).toEqual({ kind: 'setup-app-picker' });
+    expect(classify(`/apps/${SETUP_APP_SLUG.toUpperCase()}/installations/new`)).toEqual({ kind: 'setup-app-picker' });
+  });
+
+  it('reads neither the preselected page the picker is sent to, nor the App\'s own page, nor SymphonyBoard\'s picker as it', () => {
+    for (const path of [
+      `/apps/${SETUP_APP_SLUG}/installations/new/permissions`,
+      `/apps/${SETUP_APP_SLUG}/installations/new/permissions/`,
+      `/apps/${SETUP_APP_SLUG}/installations`,
+      `/apps/${SETUP_APP_SLUG}/installations/`,
+      `/apps/${SETUP_APP_SLUG}`,
+      `/apps/${SETUP_APP_SLUG}/`,
+      `/apps/${APP_SLUG}/installations/new`,
+      `/apps/${APP_SLUG}/installations/new/permissions`,
+      '/apps',
+      '/apps/other-app/installations/new',
+      `/${SETUP_APP_SLUG}/installations/new`,
+      `/apps/${SETUP_APP_SLUG}/installations/new/x`,
     ]) {
       expect(classify(path), path).toEqual({ kind: 'other' });
     }

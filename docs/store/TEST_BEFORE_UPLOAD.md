@@ -9,9 +9,9 @@ repository", the header's `ul[data-testid="repo-header-actions"]` or the list ar
 `a[data-testid="star-button"]` or the older `ul.pagehead-actions`, the header those sit in, the
 `octolytics-dimension-user_id` and `octolytics-dimension-repository_id` meta tags, the About
 sidebar's topic links to `/topics/<topic>`, and a `main` on an installation's settings page), and
-whether GitHub's install pages still take the address's preselection and hand the `state` back to
-the form. The new-repository page is the one no logged-out
-read can check.
+whether GitHub's install pages still take the address's preselection, send SymphonyBoard's install
+on to Symphony Setup's install page (SymphonyBoard's Setup URL) and hand the `state` back to the
+form. The new-repository page is the one no logged-out read can check.
 
 ## Load unpacked
 
@@ -46,9 +46,13 @@ read can check.
    and its address holds `target_id` and `suggested_target_id` (the owner's account id),
    `repository_ids[]` (the repository's id) and `state` (owner/name); the page shows your account
    with "Only select repositories" and that one repository already chosen. Press **Install**: GitHub
-   lands on the front door's form, and at once, by itself, the page goes on to Symphony Setup's
-   install page, https://github.com/apps/symphony-setup/installations/new/permissions?..., with the
-   same account and repository preselected. Press **Install** there: the form on
+   itself sends you to Symphony Setup's install page, https://github.com/apps/symphony-setup/installations/new,
+   with `installation_id`, `setup_action` and the `state` appended (SymphonyBoard's Setup URL is
+   that page), and at once, by the extension's step, the page goes on to the same App's preselected
+   page, https://github.com/apps/symphony-setup/installations/new/permissions?..., with the same
+   account and repository preselected; the account picker shows for no more than a moment. (A
+   SymphonyBoard whose Setup URL still names the form lands on the form instead, and the extension
+   takes the same step from there.) Press **Install** there: the form on
    https://github.com/OpenSpineConsortium/symphony-start/issues/new opens with its Repository field
    filled in with owner/name, and the address holds `installation_id` and `state`. Press **Create**
    only if you mean to adopt the repository; otherwise close the tab, and uninstall the two Apps from
@@ -76,13 +80,13 @@ read can check.
    tab: **Create a Symphony repository** on https://github.com/new, **Open the form** on
    https://github.com/OpenSpineConsortium/symphony-start/issues/new?template=adopt.yml, **About
    Symphony** on https://openspineconsortium.com/symphony/; the trademark sentence; the Privacy
-   link on https://openspineconsortium.com/symphony/privacy.html; "Symphony 1.2.0".
+   link on https://openspineconsortium.com/symphony/privacy.html; "Symphony 1.3.0".
 
 While doing this, keep DevTools' Console open on a github.com page: nothing of Symphony's is
 printed, and no error names the extension. In DevTools' Network tab, filter by the extension's id:
-no request. The only page moves the extension made were the two on the form page in step 2, from
-the form to the Setup App's install page and, if GitHub left `state` out, to the form with it added;
-the Ready button, like Migrate, is a plain link you pressed.
+no request. The only page moves the extension made were in step 2: from Symphony Setup's account
+picker to its preselected page and, if GitHub left `state` out of the form, to the form with it
+added; the Ready button, like Migrate, is a plain link you pressed.
 
 ## If a button is missing
 
@@ -94,11 +98,11 @@ broken page.
 
 ## Just before uploading
 
-- `unzip -p .output/symphony-1.2.0-chrome.zip manifest.json` shows version 1.2.0, the name
+- `unzip -p .output/symphony-1.3.0-chrome.zip manifest.json` shows version 1.3.0, the name
   Symphony, `"permissions":["storage"]`, `"host_permissions":["https://github.com/*"]`, one content
   script matching `https://github.com/*`, and no `background`, `optional_permissions` or `key`.
 - `npm test` after the build passes with "the built package" tests run, not skipped.
-- https://openspineconsortium.com/symphony/privacy.html shows version 3 of PRIVACY.md;
+- https://openspineconsortium.com/symphony/privacy.html shows version 4 of PRIVACY.md;
   https://github.com/apps/symphonyboard and https://github.com/apps/symphony-setup answer.
 - The three images were looked at: `public/icon/128.png`, `store-assets/promo-440x280.png`,
   `store-assets/screenshot-1-1280x800.png`.

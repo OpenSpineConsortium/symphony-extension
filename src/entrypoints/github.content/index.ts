@@ -5,18 +5,26 @@
 // login and id and the repository's id and owner/name, and the About sidebar's topic links, only to
 // see whether the topic symphony is among them (core/adopted.ts), the sign that the repository is
 // adopted already; on the front door's form page, the query string (installation_id, which says an
-// install just happened, and state, the repository GitHub handed back); and on an installation's
-// settings page, nothing but the address that says it is one. No request is made from here, to
-// anyone: the buttons are links to GitHub's own pages, the Apps' install pages or, on an adopted
-// repository, its board, and the only writes are two notes in the extension's storage, the pending
-// note (core/pending.ts) and the migrate note (core/migrate.ts).
+// install just happened, and state, the repository GitHub handed back); and on Symphony Setup's
+// account-picker page and on an installation's settings page, nothing but the address that says
+// which page it is. No request is made from here, to anyone: the buttons are links to GitHub's own
+// pages, the Apps' install pages or, on an adopted repository, its board, and the only writes are two
+// notes in the extension's storage, the pending note (core/pending.ts) and the migrate note
+// (core/migrate.ts).
 //
-// The extension navigates the page in two cases and no other, both on the front door's form page
-// and both with location.replace, in onForm below: on to Symphony Setup's install page once
-// SymphonyBoard's install has landed there, because an adoption needs both Apps and GitHub's install
-// pages do not follow each other; and to the same form page with the repository added to its address,
-// when GitHub left the state out. replace rather than assign, so that Back does not return to a page
-// that would only forward again. Everywhere else the person's click on a link is the only navigation.
+// The extension navigates the page in three cases and no other, all with location.replace. On
+// Symphony Setup's account-picker page, in onPicker below: SymphonyBoard's Setup URL is that page,
+// so GitHub itself sends the person there after the first install, but the picker knows nothing of
+// the repository just installed on, and the extension sends it on to the same App's install page
+// with the account and the repository from the migrate note preselected, because an adoption needs
+// both Apps on the one repository and a picker left alone lands on "All repositories". On the front
+// door's form page, in onForm below, the two cases as before: on to Symphony Setup's install page
+// when SymphonyBoard's install landed on the form instead of the picker (an owner whose SymphonyBoard
+// still names the form as its Setup URL, or GitHub sending the person to the form), and to the same
+// form page with the repository added to its address, when GitHub left the state out. replace rather
+// than assign, so that Back does not return to a page that would only forward again; and the note is
+// advanced before the picker is left, so a return to it finds nothing to do. Everywhere else the
+// person's click on a link is the only navigation.
 //
 // GitHub draws its pages in stages and swaps them in place on navigation, so the script applies its
 // additions when the page loads, again when GitHub says a page is ready (turbo:load, turbo:render,
@@ -26,7 +34,7 @@ import { defineContentScript } from 'wxt/utils/define-content-script';
 import { isAdopted } from '../../core/adopted';
 import { injectBanner, injectCreateButton, injectMigrateButton, injectReadyButton, injectSettingsBanner, removeInjected } from '../../core/github';
 import { installUrl, ownerIdFromPage, repositoryIdFromPage, setupInstallUrl, type Target } from '../../core/install';
-import { advanceMigration, clearMigration, migrationFor, migrationTarget, nextOnForm, readMigration, recordMigration, type Migration } from '../../core/migrate';
+import { advanceMigration, clearMigration, migrationFor, migrationTarget, nextOnForm, nextOnPicker, readMigration, recordMigration, type Migration } from '../../core/migrate';
 import { boardUrl, GITHUB_ORIGIN, SITE_URL } from '../../core/names';
 import { pendingFor, recordPending, takePending } from '../../core/pending';
 import { classify, type Route } from '../../core/route';
@@ -69,6 +77,7 @@ function start(doc: Document): void {
         const route = classify(path);
         if (route.kind === 'repository') void checkPending(route);
         else if (route.kind === 'front-door-form') void onForm();
+        else if (route.kind === 'setup-app-picker') void onPicker();
         else if (route.kind === 'installation-settings') void checkMigration();
       }
       const route = classify(path);
@@ -128,7 +137,21 @@ function start(doc: Document): void {
     }
   };
 
-  /** the form page: the one place the chain goes on by itself (the header comment says why and how) */
+  /** Symphony Setup's account picker, where SymphonyBoard's install lands: on to the preselected page (the header comment says why) */
+  const onPicker = async (): Promise<void> => {
+    try {
+      const next = nextOnPicker(await readMigration(local, Date.now()));
+      if (next.kind === 'go') {
+        // the note first, so the picker reached again finds step setup and stays put
+        await advanceMigration(local, Date.now());
+        location.replace(next.href);
+      }
+    } catch {
+      // storage unavailable: the picker stays as GitHub drew it, and the person chooses by hand
+    }
+  };
+
+  /** the form page: where the chain goes on when the first install landed here, and where it ends (the header comment says why and how) */
   const onForm = async (): Promise<void> => {
     try {
       const next = nextOnForm(await readMigration(local, Date.now()), location.search);
