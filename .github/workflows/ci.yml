@@ -2,7 +2,9 @@ name: ci
 # The whole check on every push and pull request: the types, the tests (the DOM fixtures, the pending
 # note, the install address and the source hygiene), the Chrome build and its zip, with the package
 # kept as the run's artifact so a reviewer can load it unpacked. No secrets: nothing here signs in,
-# uploads to a store or reaches any host; the store upload is done by hand (docs/store/SUBMISSION.md).
+# uploads to a store or reaches any host. The release is release.yml beside this file: one call of the
+# Chrome Web Store release kit, which makes the GitHub release on every push to main and, once the
+# store secrets exist, uploads the same zip to the store (docs/store/SUBMISSION.md, "Releases from CI").
 on:
   push:
     branches: [main]

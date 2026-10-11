@@ -6,6 +6,27 @@ moves its fields around from time to time; the field names below are the ones in
 writing (2026-10-11), and the texts are what matter. Nothing here needs a secret, a token or a
 script: the upload is done by hand in the browser.
 
+## Releases from CI, after the first submission
+
+The first upload is by hand (below): the store gives the item its id only
+then. From then on `.github/workflows/release.yml` does the rest, as one
+call of the Chrome Web Store release kit
+(OpenSpineConsortium/chrome-store-release-kit, its `release-kit/README.md`):
+every push to `main` runs the typecheck and the tests, builds the zip with
+`npm run zip`, numbers it `<manifest version>.<commit count>` and makes the
+GitHub release `extension-v<that version>` with the zip attached, so the
+newest build is always at
+https://github.com/OpenSpineConsortium/symphony-extension/releases/latest/download/symphony-chrome.zip.
+Once the five secrets `CWS_PUBLISHER_ID`, `CWS_ITEM_ID`, `CWS_CLIENT_ID`,
+`CWS_CLIENT_SECRET` and `CWS_REFRESH_TOKEN` exist (Settings, Secrets and
+variables, Actions; the kit's README says where each comes from) and the
+repository variable `CWS_ON_PUSH` is `upload`, that same zip becomes the
+store item's draft on every push; with `publish` the draft is submitted
+for review as well. Until then the store step says "Not configured" and
+the run stays green. A tag `extension-v<version>` releases the manifest's
+exact version and always uploads it; "Run workflow" with `upload` or
+`publish` ticked does it by hand.
+
 ## 0. Before the first submission
 
 1. **The package.** In the repository, with Node 22: `npm ci`, `npm run typecheck`, `npm test`,
