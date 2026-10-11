@@ -1,0 +1,38 @@
+<!doctype html>
+<!-- The store's small promo tile, 440x280, drawn by scripts/build-assets.mjs. Symphony's mark and name on
+     the dark slate, one line on what it does, and the trademark note small at the foot. Fonts are whatever
+     the drawing machine has (Inter, else the system sans); the image is committed, so the store never
+     depends on them. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <style>
+    html, body { margin: 0; padding: 0; }
+    body {
+      width: 440px; height: 280px; overflow: hidden; background: #1F2328; color: #F6F8FA;
+      font-family: Inter, "Segoe UI", -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
+      position: relative;
+    }
+    .mark { position: absolute; left: 36px; top: 40px; }
+    .name { position: absolute; left: 132px; top: 46px; font-size: 44px; font-weight: 700; letter-spacing: -0.5px; line-height: 1; }
+    .by { position: absolute; left: 134px; top: 98px; font-size: 14px; color: #9198A1; letter-spacing: 0.2px; }
+    .line { position: absolute; left: 36px; right: 36px; top: 150px; font-size: 18px; line-height: 1.35; color: #F6F8FA; }
+    .line b { color: #D97757; font-weight: 600; }
+    .foot { position: absolute; left: 36px; right: 36px; bottom: 14px; font-size: 10px; color: #767E88; line-height: 1.4; }
+  </style>
+</head>
+<body>
+  <svg class="mark" viewBox="0 0 128 128" width="80" height="80" aria-hidden="true">
+    <rect x="4" y="4" width="120" height="120" rx="28" fill="#2B3138"/>
+    <g fill="#D97757">
+      <circle cx="64" cy="22" r="9"/><circle cx="93.7" cy="34.3" r="9"/><circle cx="106" cy="64" r="9"/><circle cx="93.7" cy="93.7" r="9"/>
+      <circle cx="64" cy="106" r="9"/><circle cx="34.3" cy="93.7" r="9"/><circle cx="22" cy="64" r="9"/><circle cx="34.3" cy="34.3" r="9"/>
+    </g>
+    <circle cx="64" cy="64" r="13" fill="#FFF4EC"/><circle cx="64" cy="64" r="5" fill="#2B3138"/>
+  </svg>
+  <div class="name">Symphony</div>
+  <div class="by">by OpenSpineConsortium</div>
+  <div class="line"><b>Claude Code</b> teammates on your repository, <b>one click</b> from github.com.</div>
+  <div class="foot">Symphony is not a GitHub or Anthropic product. GitHub is GitHub's mark; Claude and Claude Code are Anthropic's marks, used here to say what Symphony works with.</div>
+</body>
+</html>

@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Symphony promo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html, body { margin: 0; padding: 0; background: #0b1018; overflow: hidden; height: 100%; }
+  canvas { display: block; }
+  body.live { display: flex; align-items: center; justify-content: center; }
+  body.live canvas { max-width: 100vw; max-height: 100vh; width: auto; height: auto; }
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+<script>
+(function () {
+  'use strict';
+
+  // Every frame is drawn from scratch as a function of the time in seconds,
+  // so a renderer can step through the frames in any order and get the same
+  // pixels each time. Nothing here keeps animation state between calls.
+
+  var FPS = 30;
+  var DURATION = 23.6;
+  var VW = 1920, VH = 1080;
+
+  // The orbit's center sits below the frame's middle so that the whole
+  // circle, with the icons that ride it, stays inside the 1080 lines.
+  var CX = 960, CY = 556, R = 410;
+  var MARK_R = 130;      // the white disc behind the GitHub mark
+  var MARK_INNER = 121;  // the mark itself, which leaves a thin white ring
+  var USER_R = 62;
+  var CLAUDE_SIZE = 46;  // the longest ray of the starburst
+  var ARROW_START = R - 76;
+  var ARROW_END = MARK_R + 20;
+
+  // The slots on the circle, in degrees clockwise from twelve o'clock, in the
+  // order the icons leave the user's shadow. The first three go the long way
+  // round so that the right-hand slots fill without any icon crossing another;
+  // the last three stop short on the left.
+  var SLOT_STEP = 19;
+  var SLOTS = [19, 38, 57, -57, -38, -19];
+
+  var T = {
+    markIn: [0.0, 0.9],
+    userIn: [0.3, 1.2],
+    ringIn: [0.4, 1.4],
+    ringOut: [10.1, 12.0],
+    userArrow: [0.9, 1.5],
+    pulseStart: 2.1, pulsePeriod: 1.6, pulseTravel: 0.8,
+    // The long trips take four times the short ones, so with this stagger an
+    // icon lands on the right each time one lands on the left.
+    claudeStart: 4.5, claudeStagger: 0.9, longTrip: 3.6, shortTrip: 0.9,
+    claudeArrows: 10.1, claudeArrowStagger: 0.1, arrowDraw: 0.6,
+    pushIn: [9.9, 15.9],
+    fadeOut: [15.9, 16.9],
+    titleIn: [16.9, 18.4],
+    typing: [18.6, 20.6],
+    caretOff: 22.0
+  };
+
+  var IVORY = '#F0EEE6';
+  var CLAUDE_ORANGE = '#D97757';
+  var ARROW_RGB = [214, 224, 240];
+  var USER_BALL = [143, 193, 255];
+  var CLAUDE_BALL = [242, 170, 130];
+  var TITLE_FONT = '400 196px Caladea, "Liberation Serif", "DejaVu Serif", serif';
+  var SUB_FONT = '400 60px Caladea, "Liberation Serif", "DejaVu Serif", serif';
+
+  // The GitHub mark, from Octicons (mark-github, 16 units square).
+  var GITHUB_PATH = 'M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z';
+  var githubPath = new Path2D(GITHUB_PATH);
+
+  // The starburst's rays: angle, length and width, all slightly uneven on
+  // purpose, since the mark is drawn by hand rather than by compass.
+  var RAYS = [
+    [0, 1.00, 1.00], [31, 0.72, 0.94], [59, 0.90, 1.00], [91, 0.62, 0.90],
+    [120, 0.95, 1.00], [151, 0.78, 0.94], [182, 0.88, 1.00], [211, 0.66, 0.90],
+    [240, 0.97, 1.00], [271, 0.75, 0.94], [301, 0.92, 1.00], [331, 0.70, 0.90]
+  ];
+
+  var params = new URLSearchParams(location.search);
+  var W = parseInt(params.get('w') || VW, 10);
+  var H = parseInt(params.get('h') || VH, 10);
+  var canvas = document.getElementById('stage');
+  canvas.width = W;
+  canvas.height = H;
+  var ctx = canvas.getContext('2d');
+  // The scene is drawn on its own layer so that it can fade out as one
+  // picture instead of as a pile of translucent parts.
+  var scene = document.createElement('canvas');
+  scene.width = VW;
+  scene.height = VH;
+  var sctx = scene.getContext('2d');
+
+  // The composition is 1920 by 1080; another canvas size shows it fitted
+  // and centered, with the background filling whatever is left over.
+  var fitScale = Math.min(W / VW, H / VH);
+  var fitX = (W - VW * fitScale) / 2;
+  // A still at another aspect may want the picture lower than the video
+  // frames it, since the scene sits high; dy moves it, in composition pixels.
+  var fitY = (H - VH * fitScale) / 2 + parseFloat(params.get('dy') || '0') * fitScale;
+
+  function clamp01(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
+  function ease(x) {
+    x = clamp01(x);
+    return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+  }
+  function span(t, a, b) { return ease((t - a) / (b - a)); }
+  function rgba(c, a) { return 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + a + ')'; }
+  function onCircle(deg, radius) {
+    var a = deg * Math.PI / 180;
+    return { x: CX + radius * Math.sin(a), y: CY - radius * Math.cos(a) };
+  }
+
+  // ---- the pieces --------------------------------------------------------
+
+  // A ray with round ends, narrower where it leaves the center.
+  function capsule(c, x0, y0, x1, y1, w0, w1) {
+    var a = Math.atan2(y1 - y0, x1 - x0);
+    var nx = -Math.sin(a), ny = Math.cos(a);
+    c.beginPath();
+    c.moveTo(x0 + nx * w0, y0 + ny * w0);
+    c.lineTo(x1 + nx * w1, y1 + ny * w1);
+    c.arc(x1, y1, w1, a + Math.PI / 2, a - Math.PI / 2, true);
+    c.lineTo(x0 - nx * w0, y0 - ny * w0);
+    c.arc(x0, y0, w0, a - Math.PI / 2, a + Math.PI / 2, true);
+    c.closePath();
+    c.fill();
+  }
+
+  function drawClaudeIcon(c, x, y, size, alpha) {
+    c.save();
+    c.translate(x, y);
+    c.rotate(-9 * Math.PI / 180);
+    c.globalAlpha = alpha;
+    c.fillStyle = CLAUDE_ORANGE;
+    for (var i = 0; i < RAYS.length; i++) {
+      var a = RAYS[i][0] * Math.PI / 180;
+      var len = RAYS[i][1] * size;
+      var w = RAYS[i][2];
+      capsule(c, Math.cos(a) * size * 0.2, Math.sin(a) * size * 0.2,
+        Math.cos(a) * len, Math.sin(a) * len, size * 0.095 * w, size * 0.13 * w);
+    }
+    c.beginPath();
+    c.arc(0, 0, size * 0.14, 0, Math.PI * 2);
+    c.fill();
+    c.restore();
+  }
+
+  function drawUserAvatar(c, x, y, scale, alpha) {
+    var r = USER_R;
+    c.save();
+    c.translate(x, y);
+    c.scale(scale, scale);
+    c.globalAlpha = alpha;
+    c.beginPath();
+    c.arc(0, 0, r, 0, Math.PI * 2);
+    c.clip();
+    var g = c.createLinearGradient(0, -r, 0, r);
+    g.addColorStop(0, '#4F8EF7');
+    g.addColorStop(1, '#3B7DF0');
+    c.fillStyle = g;
+    c.fillRect(-r, -r, 2 * r, 2 * r);
+    // shoulders and shirt
+    c.fillStyle = '#2B64DD';
+    c.beginPath();
+    c.ellipse(0, 1.2 * r, 0.74 * r, 0.64 * r, 0, 0, Math.PI * 2);
+    c.fill();
+    // neck
+    c.fillStyle = '#E8BC9C';
+    c.fillRect(-0.14 * r, 0.3 * r, 0.28 * r, 0.42 * r);
+    // collar
+    c.strokeStyle = '#DCE7FF';
+    c.lineWidth = 0.055 * r;
+    c.lineCap = 'round';
+    c.beginPath();
+    c.moveTo(-0.3 * r, 0.6 * r);
+    c.lineTo(0, 0.86 * r);
+    c.lineTo(0.3 * r, 0.6 * r);
+    c.stroke();
+    // ears, then the head over them
+    c.fillStyle = '#F6D2B6';
+    c.beginPath();
+    c.arc(-0.44 * r, 0.02 * r, 0.085 * r, 0, Math.PI * 2);
+    c.arc(0.44 * r, 0.02 * r, 0.085 * r, 0, Math.PI * 2);
+    c.fill();
+    c.beginPath();
+    c.arc(0, -0.02 * r, 0.44 * r, 0, Math.PI * 2);
+    c.fill();
+    // hair: the top of the head above a fringe that dips on the right
+    c.save();
+    c.beginPath();
+    c.arc(0, -0.04 * r, 0.455 * r, 0, Math.PI * 2);
+    c.clip();
+    c.fillStyle = '#2A2E45';
+    c.beginPath();
+    c.moveTo(-0.5 * r, -0.08 * r);
+    c.quadraticCurveTo(-0.3 * r, -0.26 * r, -0.04 * r, -0.17 * r);
+    c.quadraticCurveTo(0.22 * r, -0.08 * r, 0.5 * r, -0.2 * r);
+    c.lineTo(0.5 * r, -0.6 * r);
+    c.lineTo(-0.5 * r, -0.6 * r);
+    c.closePath();
+    c.fill();
+    c.restore();
+    // eyes
+    c.fillStyle = '#262A3B';
+    c.beginPath();
+    c.arc(-0.16 * r, 0.05 * r, 0.045 * r, 0, Math.PI * 2);
+    c.arc(0.16 * r, 0.05 * r, 0.045 * r, 0, Math.PI * 2);
+    c.fill();
+    // smile
+    c.strokeStyle = '#B9674A';
+    c.lineWidth = 0.032 * r;
+    c.beginPath();
+    c.arc(0, 0.13 * r, 0.11 * r, 0.2 * Math.PI, 0.8 * Math.PI);
+    c.stroke();
+    // blush
+    c.fillStyle = 'rgba(238,140,130,0.4)';
+    c.beginPath();
+    c.arc(-0.27 * r, 0.15 * r, 0.065 * r, 0, Math.PI * 2);
+    c.arc(0.27 * r, 0.15 * r, 0.065 * r, 0, Math.PI * 2);
+    c.fill();
+    c.restore();
+  }
+
+  function drawMark(c, t, glow) {
+    var a = span(t, T.markIn[0], T.markIn[1]);
+    if (a <= 0) return;
+    var s = 0.86 + 0.14 * a;
+    c.save();
+    c.translate(CX, CY);
+    c.scale(s, s);
+    c.globalAlpha = a;
+    c.fillStyle = '#FFFFFF';
+    c.shadowColor = 'rgba(255,255,255,' + (0.9 * glow) + ')';
+    c.shadowBlur = 48 * glow;
+    c.beginPath();
+    c.arc(0, 0, MARK_R, 0, Math.PI * 2);
+    c.fill();
+    c.shadowBlur = 0;
+    c.fillStyle = '#0D1117';
+    var k = (MARK_INNER * 2) / 16;
+    c.translate(-MARK_INNER, -MARK_INNER);
+    c.scale(k, k);
+    c.fill(githubPath);
+    c.restore();
+  }
+
+  function drawArrivalRing(c, since, count) {
+    var u = since / 0.7;
+    if (u < 0 || u >= 1) return;
+    var strength = 0.6 + 0.4 * Math.min(1, (count - 1) / 6);
+    var grow = 1 - Math.pow(1 - u, 3);
+    c.save();
+    c.globalAlpha = 0.38 * (1 - u) * strength;
+    c.strokeStyle = '#FFFFFF';
+    c.lineWidth = 3 - 2 * u;
+    c.beginPath();
+    c.arc(CX, CY, MARK_R + 4 + 64 * grow, 0, Math.PI * 2);
+    c.stroke();
+    c.restore();
+  }
+
+  function drawArrow(c, slot, progress) {
+    if (progress <= 0) return;
+    var start = onCircle(slot, ARROW_START);
+    var end = onCircle(slot, ARROW_END);
+    var dx = end.x - start.x, dy = end.y - start.y;
+    var len = Math.hypot(dx, dy);
+    var ux = dx / len, uy = dy / len;
+    var tipX = start.x + dx * progress, tipY = start.y + dy * progress;
+    var headLen = 18, headHalf = 8;
+    var headScale = ease(progress / 0.2);
+    c.save();
+    c.strokeStyle = rgba(ARROW_RGB, 0.55);
+    c.lineWidth = 3;
+    c.lineCap = 'round';
+    c.beginPath();
+    c.moveTo(start.x, start.y);
+    c.lineTo(tipX - ux * headLen * 0.85 * headScale, tipY - uy * headLen * 0.85 * headScale);
+    c.stroke();
+    if (headScale > 0) {
+      var hl = headLen * headScale, hh = headHalf * headScale;
+      var bx = tipX - ux * hl, by = tipY - uy * hl;
+      c.fillStyle = rgba(ARROW_RGB, 0.9);
+      c.beginPath();
+      c.moveTo(tipX, tipY);
+      c.lineTo(bx - uy * hh, by + ux * hh);
+      c.lineTo(bx + uy * hh, by - ux * hh);
+      c.closePath();
+      c.fill();
+    }
+    c.restore();
+  }
+
+  function drawBall(c, x, y, radius, color, alpha, haloAlpha) {
+    c.save();
+    c.globalAlpha = alpha;
+    var g = c.createRadialGradient(x, y, 0, x, y, radius * 3.4);
+    g.addColorStop(0, rgba(color, 0.5 * haloAlpha));
+    g.addColorStop(0.45, rgba(color, 0.16 * haloAlpha));
+    g.addColorStop(1, rgba(color, 0));
+    c.fillStyle = g;
+    c.beginPath();
+    c.arc(x, y, radius * 3.4, 0, Math.PI * 2);
+    c.fill();
+    c.fillStyle = rgba(color, 1);
+    c.shadowColor = rgba(color, 0.9);
+    c.shadowBlur = 14;
+    c.beginPath();
+    c.arc(x, y, radius, 0, Math.PI * 2);
+    c.fill();
+    c.restore();
+  }
+
+  // ---- the timing of the pieces ------------------------------------------
+
+  function arrowBegin(slot) {
+    if (slot === 0) return T.userArrow[0];
+    return T.claudeArrows + (Math.abs(slot) / SLOT_STEP - 1) * T.claudeArrowStagger;
+  }
+  function arrowDone(slot) {
+    if (slot === 0) return T.userArrow[1];
+    return arrowBegin(slot) + T.arrowDraw;
+  }
+  function arrowProgress(slot, t) {
+    return span(t, arrowBegin(slot), arrowDone(slot));
+  }
+
+  // The balls follow one clock, so that once every arrow is drawn they all
+  // leave together. A ball joins at rest and takes the next departure, never
+  // one that left before its arrow was finished.
+  function ballState(slot, t) {
+    var done = arrowDone(slot);
+    if (t < done) return null;
+    var appear = ease((t - done) / 0.3);
+    var k = Math.floor((t - T.pulseStart) / T.pulsePeriod);
+    var launch = T.pulseStart + k * T.pulsePeriod;
+    var local = t - launch;
+    if (t >= T.pulseStart && local < T.pulseTravel && launch >= done) {
+      var q = ease(local / T.pulseTravel);
+      var fade = q < 0.86 ? 1 : 1 - (q - 0.86) / 0.14;
+      return { mode: 'travel', q: q, alpha: appear * fade };
+    }
+    var nextLaunch, restStart;
+    if (t < T.pulseStart) { nextLaunch = T.pulseStart; restStart = done; }
+    else if (launch < done) { nextLaunch = launch + T.pulsePeriod; restStart = done; }
+    else { nextLaunch = launch + T.pulsePeriod; restStart = launch + T.pulseTravel; }
+    var r = clamp01((t - restStart) / (nextLaunch - restStart));
+    var breath = (nextLaunch - restStart) < 0.5 ? 0 : 0.5 - 0.5 * Math.cos(2 * Math.PI * r);
+    var fadeIn = ease((t - restStart) / 0.25);
+    return { mode: 'rest', breath: breath, alpha: appear * fadeIn };
+  }
+
+  function landing(t) {
+    var k = Math.floor((t - T.pulseStart - T.pulseTravel) / T.pulsePeriod);
+    if (k < 0) return { glow: 0, since: -1, count: 0 };
+    var landed = T.pulseStart + k * T.pulsePeriod + T.pulseTravel;
+    var launch = landed - T.pulseTravel;
+    var count = arrowDone(0) <= launch ? 1 : 0;
+    for (var i = 0; i < SLOTS.length; i++) if (arrowDone(SLOTS[i]) <= launch) count++;
+    var since = t - landed;
+    return { glow: Math.exp(-since / 0.35), since: since, count: count };
+  }
+
+  // Where a Claude icon is at time t: null before it has left the user's
+  // shadow, otherwise its angle, its scale and how far along it is.
+  function claudeState(i, t) {
+    var depart = T.claudeStart + i * T.claudeStagger;
+    if (t < depart) return null;
+    var slot = SLOTS[i];
+    var travel = slot > 0 ? 360 - slot : -slot;
+    var trip = slot > 0 ? T.longTrip : T.shortTrip;
+    var p = ease((t - depart) / trip);
+    var angle = -travel * p;
+    var grow = 0.6 + 0.4 * ease((t - depart) / 0.5);
+    var settled = t - (depart + trip);
+    var pop = settled > 0 && settled < 0.35 ? 1 + 0.07 * Math.sin(Math.PI * settled / 0.35) : 1;
+    return { angle: angle, scale: grow * pop, slot: slot, p: p };
+  }
+
+  // ---- the frame ---------------------------------------------------------
+
+  function drawBackground(c) {
+    c.fillStyle = '#0B1018';
+    c.fillRect(0, 0, W, H);
+    var px = fitX + 960 * fitScale, py = fitY + 548 * fitScale;
+    var pool = c.createRadialGradient(px, py, 0, px, py, 980 * fitScale);
+    pool.addColorStop(0, 'rgba(28,38,56,0.95)');
+    pool.addColorStop(0.45, 'rgba(17,23,35,0.6)');
+    pool.addColorStop(1, 'rgba(11,16,24,0)');
+    c.fillStyle = pool;
+    c.fillRect(0, 0, W, H);
+    var v = c.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.3, W / 2, H / 2, Math.hypot(W, H) * 0.58);
+    v.addColorStop(0, 'rgba(0,0,0,0)');
+    v.addColorStop(1, 'rgba(0,0,0,0.62)');
+    c.fillStyle = v;
+    c.fillRect(0, 0, W, H);
+  }
+
+  function drawScene(c, t) {
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    c.clearRect(0, 0, VW, VH);
+    // Once the team has settled, the picture is a crown over the mark and
+    // sits high in the frame; a slow push-in, with a drift down, carries it
+    // toward the middle while the pull requests flow.
+    var push = span(t, T.pushIn[0], T.pushIn[1]);
+    var z = 1 + 0.1 * push;
+    c.setTransform(z, 0, 0, z, 960 - z * 960, 400 + 50 * push - z * 400);
+
+    var ringA = 0.08 * span(t, T.ringIn[0], T.ringIn[1]) * (1 - span(t, T.ringOut[0], T.ringOut[1]));
+    if (ringA > 0) {
+      c.save();
+      c.strokeStyle = 'rgba(255,255,255,' + ringA + ')';
+      c.lineWidth = 1.5;
+      c.beginPath();
+      c.arc(CX, CY, R, 0, Math.PI * 2);
+      c.stroke();
+      c.restore();
+    }
+
+    var land = landing(t);
+    drawMark(c, t, land.glow);
+    drawArrivalRing(c, land.since, land.count);
+
+    var slots = [0].concat(SLOTS);
+    var i, slot, st;
+    for (i = 0; i < slots.length; i++) drawArrow(c, slots[i], arrowProgress(slots[i], t));
+
+    for (i = 0; i < slots.length; i++) {
+      slot = slots[i];
+      st = ballState(slot, t);
+      if (!st || st.alpha <= 0) continue;
+      var color = slot === 0 ? USER_BALL : CLAUDE_BALL;
+      var start = onCircle(slot, ARROW_START), end = onCircle(slot, ARROW_END);
+      if (st.mode === 'travel') {
+        var x = start.x + (end.x - start.x) * st.q, y = start.y + (end.y - start.y) * st.q;
+        // a short tail, longest mid-flight, so the eye reads the direction
+        var tail = 34 * Math.sin(Math.PI * st.q);
+        if (tail > 1) {
+          var ux = (start.x - end.x) / Math.hypot(end.x - start.x, end.y - start.y);
+          var uy = (start.y - end.y) / Math.hypot(end.x - start.x, end.y - start.y);
+          var tg = c.createLinearGradient(x, y, x + ux * tail, y + uy * tail);
+          tg.addColorStop(0, rgba(color, 0.55 * st.alpha));
+          tg.addColorStop(1, rgba(color, 0));
+          c.save();
+          c.strokeStyle = tg;
+          c.lineWidth = 5;
+          c.lineCap = 'round';
+          c.beginPath();
+          c.moveTo(x, y);
+          c.lineTo(x + ux * tail, y + uy * tail);
+          c.stroke();
+          c.restore();
+        }
+        drawBall(c, x, y, 8.5, color, st.alpha, 1);
+      } else {
+        drawBall(c, start.x, start.y, 7.2 + 1.8 * st.breath, color, st.alpha, 0.6 + 0.6 * st.breath);
+      }
+    }
+
+    // the Claude icons go under the user, which is where they come out from
+    for (i = 0; i < SLOTS.length; i++) {
+      st = claudeState(i, t);
+      if (!st) continue;
+      var pos = onCircle(st.angle, R);
+      drawClaudeIcon(c, pos.x, pos.y, CLAUDE_SIZE * st.scale, 1);
+    }
+
+    var ua = span(t, T.userIn[0], T.userIn[1]);
+    if (ua > 0) {
+      var up = onCircle(0, R);
+      drawUserAvatar(c, up.x, up.y, 0.86 + 0.14 * ua, ua);
+    }
+  }
+
+  function drawTitle(c, t) {
+    var a = span(t, T.titleIn[0], T.titleIn[1]);
+    if (a <= 0) return;
+    c.save();
+    c.globalAlpha = a;
+    var g = c.createRadialGradient(960, 560, 0, 960, 560, 640);
+    g.addColorStop(0, 'rgba(217,119,87,0.11)');
+    g.addColorStop(1, 'rgba(217,119,87,0)');
+    c.fillStyle = g;
+    c.fillRect(0, 0, VW, VH);
+    c.fillStyle = IVORY;
+    c.font = TITLE_FONT;
+    c.textBaseline = 'alphabetic';
+    c.letterSpacing = '-3px';
+    var w = c.measureText('Symphony').width;
+    c.fillText('Symphony', 960 - w / 2, 548 + 18 * (1 - a));
+    c.restore();
+    drawSubtitle(c, t);
+  }
+
+  function drawSubtitle(c, t) {
+    var u = clamp01((t - T.typing[0]) / (T.typing[1] - T.typing[0]));
+    if (u <= 0) return;
+    var head = 'Powered by ', tail = 'Claude';
+    var units = head.length + 1 + tail.length;
+    var count = Math.min(units, Math.floor(u * units + 1e-6));
+    c.save();
+    c.font = SUB_FONT;
+    c.textBaseline = 'alphabetic';
+    c.letterSpacing = '0px';
+    var em = 60;
+    // The icon's slot: the space after "by" already gives air on the left,
+    // so the icon sits a little left of the slot's middle to balance it.
+    var slotW = 0.93 * em;
+    var headW = c.measureText(head).width;
+    var tailW = c.measureText(tail).width;
+    var x0 = 960 - (headW + slotW + tailW) / 2;
+    var y = 668;
+    c.fillStyle = 'rgba(240,238,230,0.82)';
+    var caretX = x0;
+    if (count > 0) {
+      var shown = head.slice(0, Math.min(count, head.length));
+      c.fillText(shown, x0, y);
+      caretX = x0 + c.measureText(shown).width;
+    }
+    if (count > head.length) {
+      drawClaudeIcon(c, x0 + headW + 0.34 * em, y - 0.33 * em, 0.33 * em, 1);
+      caretX = x0 + headW + slotW;
+    }
+    if (count > head.length + 1) {
+      var shownTail = tail.slice(0, count - head.length - 1);
+      c.fillStyle = 'rgba(240,238,230,0.95)';
+      c.fillText(shownTail, x0 + headW + slotW, y);
+      caretX = x0 + headW + slotW + c.measureText(shownTail).width;
+    }
+    // the caret is steady while typing, blinks twice afterwards, then goes
+    var caretOn;
+    if (u < 1) caretOn = true;
+    else if (t < T.caretOff) caretOn = ((t - T.typing[1]) % 0.7) < 0.35;
+    else caretOn = false;
+    if (caretOn) {
+      c.fillStyle = 'rgba(240,238,230,0.8)';
+      c.fillRect(caretX + 5, y - 0.7 * em, 3, 0.84 * em);
+    }
+    c.restore();
+  }
+
+  function sceneAlpha(t) { return 1 - span(t, T.fadeOut[0], T.fadeOut[1]); }
+
+  function renderAt(t) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    drawBackground(ctx);
+    var sa = sceneAlpha(t);
+    if (sa > 0) {
+      drawScene(sctx, t);
+      ctx.globalAlpha = sa;
+      ctx.drawImage(scene, fitX, fitY, VW * fitScale, VH * fitScale);
+      ctx.globalAlpha = 1;
+    }
+    if (t >= T.titleIn[0]) {
+      ctx.save();
+      ctx.translate(fitX, fitY);
+      ctx.scale(fitScale, fitScale);
+      drawTitle(ctx, t);
+      ctx.restore();
+    }
+  }
+
+  window.renderAt = renderAt;
+  window.DURATION = DURATION;
+  window.FPS = FPS;
+
+  if (params.get('live') === '1') {
+    document.body.classList.add('live');
+    var started = performance.now();
+    (function loop() {
+      renderAt(((performance.now() - started) / 1000) % DURATION);
+      requestAnimationFrame(loop);
+    })();
+  } else {
+    renderAt(parseFloat(params.get('t') || '0'));
+  }
+})();
+</script>
+</body>
+</html>

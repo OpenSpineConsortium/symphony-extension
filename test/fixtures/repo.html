@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<!-- A plausible repository main page, https://github.com/octo-org/widgets, in the shape GitHub has kept for
+     its header through several redesigns: the octolytics meta tags (user_id and user_login are the
+     repository's owner; actor-id is the viewer), #repository-container-header, and ul.pagehead-actions with
+     one li per action: Pin, Watch, Fork, Star. Not a capture: GitHub's live markup may differ. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>octo-org/widgets: Widgets for everyone</title>
+  <meta name="octolytics-actor-id" content="4242">
+  <meta name="octolytics-actor-login" content="octocat">
+  <meta name="octolytics-dimension-user_id" content="98765">
+  <meta name="octolytics-dimension-user_login" content="octo-org">
+  <meta name="octolytics-dimension-repository_id" content="555001">
+  <meta name="octolytics-dimension-repository_nwo" content="octo-org/widgets">
+  <meta name="octolytics-dimension-repository_public" content="true">
+  <meta name="octolytics-dimension-repository_is_fork" content="false">
+  <meta name="octolytics-dimension-repository_network_root_id" content="555001">
+  <meta name="octolytics-dimension-repository_network_root_nwo" content="octo-org/widgets">
+</head>
+<body class="logged-in">
+  <div class="application-main">
+    <main id="js-repo-pjax-container">
+      <div id="repository-container-header" class="pt-3 hide-full-screen" data-turbo-replace>
+        <div class="d-flex flex-wrap flex-justify-end mb-3 px-3 px-md-4 px-lg-5">
+          <div class="flex-auto min-width-0 width-fit mr-3">
+            <div class="d-flex flex-wrap flex-items-center wb-break-word f3 text-normal">
+              <svg aria-hidden="true" class="octicon octicon-repo"></svg>
+              <span class="author flex-self-stretch"><a class="url fn" href="/octo-org">octo-org</a></span>
+              <span class="mx-1 flex-self-stretch color-fg-muted">/</span>
+              <strong itemprop="name" class="mr-2 flex-self-stretch"><a data-pjax="#repo-content-pjax-container" href="/octo-org/widgets">widgets</a></strong>
+              <span class="Label Label--secondary v-align-middle mr-1">Public</span>
+            </div>
+          </div>
+          <div id="repository-details-container" data-turbo-replace>
+            <ul class="pagehead-actions flex-shrink-0 d-none d-md-inline" style="padding: 2px 0;">
+              <li>
+                <button type="button" class="btn-sm btn" aria-label="Pin this repository to your profile">
+                  <svg aria-hidden="true" class="octicon octicon-pin"></svg> Pin
+                </button>
+              </li>
+              <li>
+                <notifications-list-subscription-form>
+                  <details class="details-reset details-overlay f5 position-relative">
+                    <summary class="btn btn-sm rounded-right-0" aria-label="Notification settings" role="button">
+                      <svg aria-hidden="true" class="octicon octicon-bell"></svg> Watch
+                      <span class="Counter">12</span>
+                    </summary>
+                  </details>
+                </notifications-list-subscription-form>
+              </li>
+              <li>
+                <div class="BtnGroup d-flex">
+                  <a href="/octo-org/widgets/fork" class="btn-sm btn BtnGroup-item border-right-0" data-hydro-click="fork">
+                    <svg aria-hidden="true" class="octicon octicon-repo-forked"></svg> Fork
+                    <span class="Counter">3</span>
+                  </a>
+                  <details class="details-reset details-overlay BtnGroup-parent d-inline-block position-relative">
+                    <summary class="btn-sm btn BtnGroup-item px-2 float-none" aria-label="See your forks of this repository"></summary>
+                  </details>
+                </div>
+              </li>
+              <li>
+                <div class="js-toggler-container starring-container">
+                  <form class="starred js-social-form" action="/octo-org/widgets/unstar" method="post">
+                    <button type="submit" class="btn-sm btn BtnGroup-item" aria-label="Unstar this repository">
+                      <svg aria-hidden="true" class="octicon octicon-star-fill"></svg> Starred
+                      <span class="Counter">41</span>
+                    </button>
+                  </form>
+                  <form class="unstarred js-social-form" action="/octo-org/widgets/star" method="post">
+                    <button type="submit" class="btn-sm btn BtnGroup-item" aria-label="Star this repository">
+                      <svg aria-hidden="true" class="octicon octicon-star"></svg> Star
+                      <span class="Counter">41</span>
+                    </button>
+                  </form>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <nav class="UnderlineNav" aria-label="Repository">
+          <ul class="UnderlineNav-body list-style-none">
+            <li class="d-inline-flex"><a class="UnderlineNav-item" href="/octo-org/widgets" aria-current="page">Code</a></li>
+            <li class="d-inline-flex"><a class="UnderlineNav-item" href="/octo-org/widgets/issues">Issues</a></li>
+            <li class="d-inline-flex"><a class="UnderlineNav-item" href="/octo-org/widgets/pulls">Pull requests</a></li>
+            <li class="d-inline-flex"><a class="UnderlineNav-item" href="/octo-org/widgets/settings">Settings</a></li>
+          </ul>
+        </nav>
+      </div>
+      <div id="repo-content-pjax-container" class="repository-content">
+        <react-app app-name="react-code-view">
+          <div class="Box">
+            <div class="Box-header">main</div>
+            <div class="Box-row">README.md</div>
+          </div>
+        </react-app>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

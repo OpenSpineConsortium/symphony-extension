@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Symphony</title>
+    <link rel="stylesheet" href="./popup.css" />
+  </head>
+  <body>
+    <!-- Every word and address below is filled in by main.ts from src/core/names.ts, so a rename is one edit there. -->
+    <header class="head">
+      <img class="mark" src="/icon/48.png" width="28" height="28" alt="" />
+      <h1 id="title"></h1>
+    </header>
+    <main>
+      <p id="what"></p>
+      <p id="how"></p>
+      <p id="then"></p>
+      <nav class="links" aria-label="Symphony">
+        <a id="create" class="button primary" target="_blank" rel="noopener noreferrer"></a>
+        <a id="form" class="button" target="_blank" rel="noopener noreferrer"></a>
+        <a id="site" class="button" target="_blank" rel="noopener noreferrer"></a>
+      </nav>
+    </main>
+    <footer>
+      <p id="trademark" class="small"></p>
+      <p class="small"><a id="privacy" target="_blank" rel="noopener noreferrer">Privacy</a> <span id="version"></span></p>
+    </footer>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

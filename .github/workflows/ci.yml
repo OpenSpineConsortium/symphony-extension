@@ -1,0 +1,38 @@
+name: ci
+# The whole check on every push and pull request: the types, the tests (the DOM fixtures, the pending
+# note, the install address and the source hygiene), the Chrome build and its zip, with the package
+# kept as the run's artifact so a reviewer can load it unpacked. No secrets: nothing here signs in,
+# uploads to a store or reaches any host; the store upload is done by hand (docs/store/SUBMISSION.md).
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: typecheck, test, build, zip
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npm run zip
+      - name: the package itself, against the same hygiene (manifest, bundle, zip name)
+        run: npx vitest run test/hygiene.test.ts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: symphony-chrome
+          path: .output/symphony-*-chrome.zip
+          if-no-files-found: error
+          retention-days: 90

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<!-- A plausible https://github.com/new in GitHub's classic (Rails + Primer CSS) markup, written from memory of
+     the page as it stood for years: form#new_repository posting to /repositories, the owner picker as a
+     <details> with a <summary>, input#repository_name, and the primary submit button at the end. Not a capture:
+     GitHub's live markup may differ, and test/github.test.ts says what the injection needs from it. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Create a New Repository</title>
+  <meta name="octolytics-actor-id" content="4242">
+  <meta name="octolytics-actor-login" content="octocat">
+</head>
+<body class="logged-in">
+  <main>
+    <div class="container-lg">
+      <h1>Create a new repository</h1>
+      <form id="new_repository" class="js-braintree-encrypt" action="/repositories" accept-charset="UTF-8" method="post">
+        <input type="hidden" name="authenticity_token" value="fixture">
+        <div class="d-flex">
+          <dl class="form-group">
+            <dt><label for="repository-owner">Owner</label></dt>
+            <dd>
+              <details id="repository-owner-select" class="details-reset details-overlay select-menu">
+                <summary class="btn select-menu-button" aria-haspopup="menu" aria-label="Repository owner">
+                  <img class="avatar" alt="" width="20" height="20"> octocat
+                </summary>
+                <details-menu role="menu"></details-menu>
+              </details>
+              <input type="hidden" name="repository[owner_id]" value="4242">
+            </dd>
+          </dl>
+          <span class="mx-2">/</span>
+          <dl class="form-group">
+            <dt><label for="repository_name">Repository name</label></dt>
+            <dd><input type="text" id="repository_name" name="repository[name]" class="form-control" autofocus></dd>
+          </dl>
+        </div>
+        <dl class="form-group">
+          <dt><label for="repository_description">Description <span class="text-normal">(optional)</span></label></dt>
+          <dd><input type="text" id="repository_description" name="repository[description]" class="form-control"></dd>
+        </dl>
+        <div class="form-checkbox">
+          <label><input type="radio" name="repository[visibility]" value="public" checked> Public</label>
+        </div>
+        <div class="form-checkbox">
+          <label><input type="radio" name="repository[visibility]" value="private"> Private</label>
+        </div>
+        <div class="form-checkbox">
+          <label><input type="checkbox" name="repository[auto_init]" value="1"> Add a README file</label>
+        </div>
+        <hr>
+        <button type="submit" class="btn btn-primary first-in-line" data-disable-with="Creating repository...">Create repository</button>
+      </form>
+    </div>
+  </main>
+</body>
+</html>

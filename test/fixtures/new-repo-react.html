@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<!-- A plausible https://github.com/new as GitHub's React rewrite of the page draws it (2024 on): a
+     react-app element, Primer React's hashed class names (prc-Button-ButtonBase-...), data-variant and
+     data-size on the buttons, an owner picker that is a button with aria-label, and a name field whose id
+     is not repository_name. Not a capture: the hashes are made up, and GitHub's live markup may differ. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>New repository</title>
+  <meta name="octolytics-actor-id" content="4242">
+  <meta name="octolytics-actor-login" content="octocat">
+</head>
+<body class="logged-in">
+  <react-app app-name="repos-create" initial-path="/new">
+    <main>
+      <div class="prc-PageLayout-PageLayoutRoot-1zlEO">
+        <h1 class="prc-Heading-Heading-6CmGO">Create a new repository</h1>
+        <form data-testid="repos-create-form" aria-label="Create a new repository">
+          <div class="prc-Stack-Stack-dHj7N">
+            <div data-testid="repository-owner-selector">
+              <span class="prc-FormControl-Label-6n6Nx">Owner</span>
+              <button type="button" class="prc-Button-ButtonBase-c5lM4" data-variant="default" data-size="medium" aria-haspopup="true" aria-label="Repository owner: octocat">
+                <span class="prc-Button-ButtonContent-HKbr-"><img class="prc-Avatar-Avatar-ZRS-m" alt="" width="20" height="20"><span class="prc-Button-Label-pTQ3x">octocat</span></span>
+              </button>
+            </div>
+            <span aria-hidden="true">/</span>
+            <div class="prc-FormControl-ControlHorizontalLayout-8xVsv">
+              <label class="prc-FormControl-Label-6n6Nx" for="repository-name-input">Repository name</label>
+              <input type="text" id="repository-name-input" class="prc-TextInput-Input-D-1Ty" aria-describedby="repository-name-input-hint" value="">
+            </div>
+          </div>
+          <div class="prc-FormControl-ControlHorizontalLayout-8xVsv">
+            <label class="prc-FormControl-Label-6n6Nx" for="repository-description-input">Description</label>
+            <input type="text" id="repository-description-input" class="prc-TextInput-Input-D-1Ty">
+          </div>
+          <fieldset>
+            <legend>Visibility</legend>
+            <label><input type="radio" name="visibility" value="public" checked> Public</label>
+            <label><input type="radio" name="visibility" value="private"> Private</label>
+          </fieldset>
+          <div class="prc-Stack-Stack-dHj7N" data-justify="end">
+            <button type="button" class="prc-Button-ButtonBase-c5lM4" data-variant="invisible" data-size="medium">Cancel</button>
+            <button type="submit" class="prc-Button-ButtonBase-c5lM4" data-variant="primary" data-size="medium" data-loading="false">
+              <span class="prc-Button-ButtonContent-HKbr-"><span class="prc-Button-Label-pTQ3x">Create repository</span></span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </main>
+  </react-app>
+</body>
+</html>

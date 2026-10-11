@@ -1,0 +1,103 @@
+<!doctype html>
+<!-- The store screenshot, 1280x800, drawn by scripts/build-assets.mjs: a mock of a github.com repository
+     page, drawn here as a static page in GitHub's proportions and neutrals, with the one button Symphony adds
+     to the header, "Migrate to Symphony", beside Watch, Fork and Star. It is a drawing, not a capture of
+     github.com: the caption at the foot says so. Nothing on it is a real person, repository or number. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <style>
+    html, body { margin: 0; padding: 0; }
+    body {
+      width: 1280px; height: 800px; overflow: hidden; background: #ffffff; color: #1f2328;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Inter, Helvetica, Arial, sans-serif;
+      font-size: 14px; line-height: 1.5; position: relative;
+    }
+    .topbar { height: 64px; background: #f6f8fa; border-bottom: 1px solid #d1d9e0; display: flex; align-items: center; padding: 0 24px; gap: 16px; }
+    .topbar .logo { width: 32px; height: 32px; border-radius: 50%; background: #1f2328; }
+    .topbar .crumb { font-weight: 600; font-size: 14px; }
+    .topbar .crumb span { color: #59636e; font-weight: 400; margin: 0 6px; }
+    .topbar .search { margin-left: auto; width: 320px; height: 32px; border: 1px solid #d1d9e0; border-radius: 6px; background: #fff; color: #59636e; display: flex; align-items: center; padding: 0 10px; font-size: 13px; }
+    .topbar .avatar { width: 32px; height: 32px; border-radius: 50%; background: #d97757; }
+    .head { padding: 16px 32px 0; }
+    .title { display: flex; align-items: center; gap: 8px; font-size: 20px; }
+    .title .repo-icon { width: 16px; height: 16px; border: 1.5px solid #59636e; border-radius: 3px; }
+    .title a { color: #0969da; text-decoration: none; }
+    .title b { font-weight: 600; }
+    .label { font-size: 12px; font-weight: 500; color: #59636e; border: 1px solid #d1d9e0; border-radius: 12px; padding: 0 7px; line-height: 18px; margin-left: 6px; }
+    .actions { float: right; display: flex; gap: 8px; margin-top: 2px; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; font-size: 12px; font-weight: 500; color: #25292e; background: #f6f8fa; border: 1px solid #d1d9e0; border-radius: 6px; box-shadow: 0 1px 0 rgba(31,35,40,0.04); white-space: nowrap; }
+    .btn .ico { width: 14px; height: 14px; border: 1.5px solid #59636e; border-radius: 50%; }
+    .btn .count { background: #e6e9ec; border-radius: 10px; padding: 0 6px; font-size: 12px; line-height: 18px; }
+    .btn.symphony { position: relative; }
+    .btn.symphony .dot { width: 14px; height: 14px; border-radius: 50%; background: #1f2328; position: relative; }
+    .btn.symphony .dot::after { content: ""; position: absolute; left: 4px; top: 4px; width: 6px; height: 6px; border-radius: 50%; background: #d97757; }
+    .callout { position: absolute; right: 32px; top: 144px; width: 300px; background: #1f2328; color: #f6f8fa; border-radius: 8px; padding: 14px 16px; font-size: 14px; line-height: 1.45; box-shadow: 0 8px 24px rgba(31,35,40,0.2); }
+    .callout::before { content: ""; position: absolute; right: 70px; top: -8px; border: 8px solid transparent; border-top: 0; border-bottom-color: #1f2328; }
+    .callout b { color: #d97757; }
+    .nav { margin-top: 18px; border-bottom: 1px solid #d1d9e0; display: flex; gap: 8px; }
+    .nav div { padding: 8px 12px 10px; color: #59636e; font-size: 14px; }
+    .nav div.on { color: #1f2328; font-weight: 600; border-bottom: 2px solid #fd8c73; }
+    .main { display: flex; gap: 24px; padding: 24px 32px; }
+    .files { flex: 1; border: 1px solid #d1d9e0; border-radius: 6px; overflow: hidden; }
+    .files .row { display: flex; align-items: center; gap: 12px; padding: 0 16px; height: 40px; border-top: 1px solid #d1d9e0; font-size: 14px; }
+    .files .row:first-child { border-top: 0; background: #f6f8fa; height: 48px; }
+    .files .row .name { width: 220px; }
+    .files .row .msg { color: #59636e; flex: 1; }
+    .files .row .age { color: #59636e; font-size: 12px; }
+    .files .row .fi { width: 14px; height: 14px; border: 1.5px solid #59636e; border-radius: 2px; }
+    .files .row .fo { width: 16px; height: 12px; background: #54aeff; border-radius: 2px; }
+    .side { width: 296px; padding-top: 128px; }
+    .side h3 { font-size: 16px; margin: 0 0 8px; }
+    .side p { margin: 0 0 12px; color: #1f2328; }
+    .side .meta { color: #59636e; font-size: 14px; margin: 0 0 6px; }
+    .caption { position: absolute; left: 0; right: 0; bottom: 0; background: #1f2328; color: #9198a1; font-size: 12px; padding: 10px 32px; line-height: 1.45; }
+    .caption b { color: #f6f8fa; font-weight: 500; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="logo"></div>
+    <div class="crumb">octo-org<span>/</span>widgets</div>
+    <div class="search">Type / to search</div>
+    <div class="avatar"></div>
+  </div>
+
+  <div class="head">
+    <div class="actions">
+      <div class="btn"><span class="ico"></span>Watch<span class="count">12</span></div>
+      <div class="btn"><span class="ico"></span>Fork<span class="count">3</span></div>
+      <div class="btn"><span class="ico"></span>Star<span class="count">41</span></div>
+      <div class="btn symphony"><span class="dot"></span>Migrate to Symphony</div>
+    </div>
+    <div class="title"><span class="repo-icon"></span><a>octo-org</a> / <b>widgets</b><span class="label">Public</span></div>
+    <div class="nav">
+      <div class="on">Code</div><div>Issues</div><div>Pull requests</div><div>Actions</div><div>Projects</div><div>Settings</div>
+    </div>
+  </div>
+
+  <div class="callout">One click: <b>Migrate to Symphony</b> opens the App's install page for this account. Press Create on the form it sends you to, and a pull request with the claim protocol lands here within about two minutes.</div>
+
+  <div class="main">
+    <div class="files">
+      <div class="row"><span class="fi"></span><span class="name">main</span><span class="msg">Add the widget catalogue</span><span class="age">2 hours ago</span></div>
+      <div class="row"><span class="fo"></span><span class="name">src</span><span class="msg">Move the parsers under src</span><span class="age">2 hours ago</span></div>
+      <div class="row"><span class="fo"></span><span class="name">tests</span><span class="msg">Cover the empty catalogue</span><span class="age">yesterday</span></div>
+      <div class="row"><span class="fi"></span><span class="name">.gitignore</span><span class="msg">Initial commit</span><span class="age">3 days ago</span></div>
+      <div class="row"><span class="fi"></span><span class="name">LICENSE</span><span class="msg">Initial commit</span><span class="age">3 days ago</span></div>
+      <div class="row"><span class="fi"></span><span class="name">README.md</span><span class="msg">Say what a widget is</span><span class="age">yesterday</span></div>
+      <div class="row"><span class="fi"></span><span class="name">pyproject.toml</span><span class="msg">Pin the build backend</span><span class="age">yesterday</span></div>
+    </div>
+    <div class="side">
+      <h3>About</h3>
+      <p>Widgets for everyone. A small library and its command line.</p>
+      <div class="meta">Readme</div>
+      <div class="meta">MIT license</div>
+      <div class="meta">41 stars</div>
+      <div class="meta">3 forks</div>
+    </div>
+  </div>
+
+  <div class="caption"><b>A drawing of a github.com repository page, not a capture.</b> Symphony adds the one button at the right of the header. Symphony is not a GitHub or Anthropic product; GitHub is GitHub's mark, and Claude Code is Anthropic's, named to say what Symphony works with.</div>
+</body>
+</html>

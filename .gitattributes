@@ -1,0 +1,5 @@
+# Everything text is LF in the repository and in the working tree, on every platform, so a Windows
+# checkout never turns a file the hygiene test reads into CRLF.
+* text=auto eol=lf
+*.png binary
+*.zip binary

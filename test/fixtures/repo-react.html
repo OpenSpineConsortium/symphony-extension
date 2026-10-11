@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<!-- A repository main page in the shape github.com served on 2026-10-11 (read logged out, trimmed to what
+     matters): the octolytics meta tags (user_id and user_login are the repository's owner), no
+     #repository-container-header and no ul.pagehead-actions any more, but a Primer React header inside
+     #repo-content-pjax-container whose action list is ul[data-testid="repo-header-actions"] with one li per
+     action (notifications, fork, star), each a Primer React button with data-component="Button" and hashed
+     class names. The class names change with GitHub's builds; the data-testid attributes are what the
+     extension looks for first. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>GitHub - octo-org/widgets: Widgets for everyone</title>
+  <meta name="octolytics-dimension-user_id" content="98765">
+  <meta name="octolytics-dimension-user_login" content="octo-org">
+  <meta name="octolytics-dimension-repository_id" content="555001">
+  <meta name="octolytics-dimension-repository_nwo" content="octo-org/widgets">
+  <meta name="octolytics-dimension-repository_public" content="true">
+  <meta name="octolytics-dimension-repository_is_fork" content="false">
+</head>
+<body class="logged-out">
+  <div class="application-main" data-commit-hovercards-enabled>
+    <main id="js-repo-pjax-container">
+      <react-partial partial-name="global-nav-bar">
+        <div data-target="react-partial.reactRoot">
+          <header aria-label="Global navigation menu" class="GlobalNav styles-module__appHeader__YzYWk"></header>
+        </div>
+      </react-partial>
+      <div id="repo-content-pjax-container" class="repository-content">
+        <react-app app-name="code-view">
+          <div data-target="react-app.reactRoot">
+            <div class="prc-PageLayout-PageLayoutRoot--KH-d" data-component="SplitPageLayout">
+              <div class="prc-PageLayout-PageLayoutWrapper-2BhU2" data-width="full">
+                <header data-component="SplitPageLayout.Header" data-hidden="false" class="prc-PageLayout-Header-0of-R tmp-px-3 tmp-px-lg-5">
+                  <div class="prc-PageLayout-HeaderContent-gdFfN">
+                    <div class="tmp-pt-3 tmp-pb-3 border-bottom color-border-muted">
+                      <div class="d-flex flex-wrap flex-items-center gapx-3 gapy-1">
+                        <div class="CodeViewHeader-module__TitleWrapper__u6G68">
+                          <div id="repo-title-component">
+                            <div class="d-flex flex-items-center f3 text-normal min-width-0">
+                              <svg aria-hidden="true" class="octicon octicon-repo mr-2"></svg>
+                              <div itemProp="name" data-testid="repo-name-wrapper" class="mr-2 prc-Truncate-Truncate-2G1eo" title="widgets">
+                                <a href="/octo-org/widgets" data-pjax="#repo-content-pjax-container">widgets</a>
+                              </div>
+                              <span id="repo-visibility-label" data-component="Label" class="prc-Label-Label--LG6X">Public</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <ul class="list-style-none d-flex flex-shrink-0 flex-wrap flex-items-center gap-2 py-1 RepoHeaderActions-module__Actions__ctPwy" data-testid="repo-header-actions">
+                            <li>
+                              <a data-component="Button" type="button" href="/login?return_to=%2Focto-org%2Fwidgets" rel="nofollow" aria-label="You must be signed in to change notification settings" data-testid="notifications-sign-in-button" class="prc-Button-ButtonBase-9n-Xk" data-loading="false" data-size="small" data-variant="default">
+                                <span data-component="buttonContent" class="prc-Button-ButtonContent-Iohp5"><span data-component="text" class="prc-Button-Label-FWkx3">Notifications</span></span>
+                              </a>
+                            </li>
+                            <li>
+                              <a data-component="Button" type="button" href="/login?return_to=%2Focto-org%2Fwidgets" rel="nofollow" data-testid="fork-button" class="prc-Button-ButtonBase-9n-Xk" data-loading="false" data-size="small" data-variant="default">
+                                <span data-component="buttonContent" class="prc-Button-ButtonContent-Iohp5"><span data-component="text" class="prc-Button-Label-FWkx3">Fork<span aria-hidden="true" data-component="CounterLabel" class="ml-1 prc-CounterLabel-CounterLabel-X-kRU"><span>3</span></span></span></span>
+                              </a>
+                            </li>
+                            <li>
+                              <a data-component="Button" type="button" href="/login?return_to=%2Focto-org%2Fwidgets" data-testid="star-button" class="prc-Button-ButtonBase-9n-Xk StarButton-module__IconOnlyWhenNarrow__JfyzM" data-loading="false" data-size="small" data-variant="default">
+                                <span data-component="buttonContent" class="prc-Button-ButtonContent-Iohp5"><span data-component="leadingVisual" class="prc-Button-Visual-YNt2F"><svg aria-hidden="true" class="octicon octicon-star"></svg></span><span data-component="text" class="prc-Button-Label-FWkx3">Star<span aria-hidden="true" data-component="CounterLabel" class="ml-1 prc-CounterLabel-CounterLabel-X-kRU"><span>41</span></span></span></span>
+                              </a>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </header>
+                <div class="prc-PageLayout-PageLayoutContent-BneH9">
+                  <div data-component="SplitPageLayout.Content" class="prc-PageLayout-ContentWrapper-gR9eG">
+                    <div id="repos-split-pane-content" tabindex="0">
+                      <div class="Box"><div class="Box-header">main</div><div class="Box-row">README.md</div></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </react-app>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

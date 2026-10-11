@@ -1,0 +1,59 @@
+/* The little styling Symphony's additions need beyond GitHub's own button classes, which they copy
+   from their neighbours (core/github.ts dressLike). Every selector is prefixed symphony- so nothing
+   here can touch an element of GitHub's. Colours come from GitHub's own CSS variables where they
+   exist, so the banner follows the page's light or dark theme, with plain fallbacks. */
+
+.symphony-create {
+  margin-left: 8px;
+}
+
+.symphony-banner {
+  /* Primer's flash supplies the border and padding; this only keeps the row readable on every width */
+  margin: 0;
+}
+
+.symphony-banner-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding-right: 32px;
+  position: relative;
+}
+
+.symphony-banner-words {
+  flex: 1 1 320px;
+  line-height: 1.5;
+}
+
+.symphony-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+}
+
+.symphony-banner-link {
+  color: var(--fgColor-accent, var(--color-accent-fg, #0969da));
+  text-decoration: none;
+}
+
+.symphony-banner-link:hover {
+  text-decoration: underline;
+}
+
+.symphony-banner-dismiss {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: 0;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--fgColor-muted, var(--color-fg-muted, #59636e));
+}
+
+.symphony-banner-dismiss:hover {
+  color: var(--fgColor-default, var(--color-fg-default, #1f2328));
+}
