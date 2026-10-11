@@ -68,13 +68,27 @@ describe('the Create button on github.com/new', () => {
         const input = p.document.querySelector<HTMLInputElement>('input#repository_name, input#repository-name-input')!;
         input.value = 'widgets';
         press(p, ours);
-        await tick();
-        expect(presses).toEqual([{ name: 'widgets', owner: 'octocat' }]);
-        expect(realClicks).toBe(1);
         // a second press while the first is going through does nothing more
         press(p, ours);
         await tick();
+        expect(presses).toEqual([{ name: 'widgets', owner: 'octocat' }]);
         expect(realClicks).toBe(1);
+        // and once it has gone through, ours is back in step with GitHub's button, not greyed out for good
+        expect(ours.disabled).toBe(false);
+      });
+
+      it('follows GitHub\'s own button: disabled while it is, enabled once it is', () => {
+        const p = page(fixture);
+        const real = p.document.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+        real.disabled = true;
+        const ours = injectCreateButton(p.document, async () => undefined)!;
+        expect(ours.disabled).toBe(true);
+        real.disabled = false;
+        expect(injectCreateButton(p.document, async () => undefined)).toBe(ours);
+        expect(ours.disabled).toBe(false);
+        real.disabled = true;
+        injectCreateButton(p.document, async () => undefined);
+        expect(ours.disabled).toBe(true);
       });
 
       it('presses GitHub\'s button even when the note cannot be written', async () => {

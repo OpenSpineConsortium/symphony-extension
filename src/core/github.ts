@@ -78,6 +78,9 @@ function findOwnerLogin(scope: ParentNode): string | undefined {
   return undefined;
 }
 
+/** on the create button while a press is going through, so a second press and the follow of GitHub's button wait */
+const PRESSING = `${MARK}-pressing`;
+
 export interface CreatePress {
   name: string;
   owner?: string;
@@ -90,9 +93,14 @@ export interface CreatePress {
  * note) and then presses GitHub's own button, so GitHub's form does exactly what it always does.
  */
 export function injectCreateButton(doc: Document, onPress: (press: CreatePress) => Promise<void>): HTMLButtonElement | undefined {
-  const existing = doc.querySelector<HTMLButtonElement>(`button[${MARK}="create"]`);
-  if (existing) return existing;
   const form = findCreateForm(doc);
+  const existing = doc.querySelector<HTMLButtonElement>(`button[${MARK}="create"]`);
+  if (existing) {
+    // GitHub enables its button only once a name is typed and checked, and disables it again while it
+    // refuses one; ours follows it, so a press of ours is always a press GitHub will act on
+    if (form && !existing.hasAttribute(PRESSING)) existing.disabled = form.submit.disabled;
+    return existing;
+  }
   if (!form) return undefined;
   const button = doc.createElement('button');
   button.type = 'button';
@@ -100,14 +108,27 @@ export function injectCreateButton(doc: Document, onPress: (press: CreatePress) 
   dressLike(button, form.submit, 'default');
   button.classList.add('symphony-button', 'symphony-create');
   button.textContent = WORDS.createButton;
+  button.disabled = form.submit.disabled;
   button.addEventListener('click', (event) => {
     event.preventDefault();
     // one press: a second one while the note is being written would submit the form twice
-    if (button.disabled) return;
+    if (button.disabled || button.hasAttribute(PRESSING)) return;
+    button.setAttribute(PRESSING, '');
     button.disabled = true;
-    const press: CreatePress = form.owner ? { name: form.name?.value ?? '', owner: form.owner } : { name: form.name?.value ?? '' };
+    // the form as it stands now: GitHub redraws parts of its page, so what was found at injection may be stale
+    const now = findCreateForm(doc) ?? form;
+    const press: CreatePress = now.owner ? { name: now.name?.value ?? '', owner: now.owner } : { name: now.name?.value ?? '' };
     // whatever happens to the note, GitHub's own button is pressed: the page must keep working
-    onPress(press).catch(() => undefined).then(() => form.submit.click());
+    onPress(press)
+      .catch(() => undefined)
+      .then(() => {
+        const target = findCreateForm(doc)?.submit ?? now.submit;
+        target.click();
+        // GitHub's page goes on from here; when it does not (its button was disabled, or it refused the
+        // name), ours is back in step with its button instead of greyed out for good
+        button.removeAttribute(PRESSING);
+        button.disabled = (findCreateForm(doc)?.submit ?? target).disabled;
+      });
   });
   form.submit.insertAdjacentElement('afterend', button);
   return button;

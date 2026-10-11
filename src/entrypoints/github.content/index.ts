@@ -96,7 +96,8 @@ function start(doc: Document): void {
   for (const event of ['turbo:load', 'turbo:render']) doc.addEventListener(event, applySoon);
   for (const event of ['popstate', 'pageshow']) window.addEventListener(event, applySoon);
   const observer = new MutationObserver(applySoon);
-  observer.observe(doc.documentElement, { childList: true, subtree: true });
+  // the attributes too, for the one GitHub toggles: its Create button's disabled state, which ours follows
+  observer.observe(doc.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled', 'aria-disabled'] });
 }
 
 const sameRepository = (a: Repository, b: Repository): boolean => a.owner.toLowerCase() === b.owner.toLowerCase() && a.name.toLowerCase() === b.name.toLowerCase();
