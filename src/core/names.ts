@@ -10,7 +10,7 @@ export const PRODUCT_NAME = 'Symphony';
 export const VENDOR = 'OpenSpineConsortium';
 
 /** the GitHub App that adopts a repository, by its slug on github.com */
-export const APP_SLUG = 'symphony';
+export const APP_SLUG = 'symphony-dev';
 
 /** the second, setup-only App, which applies the repository's settings for one run and is uninstalled after */
 export const SETUP_APP_SLUG = 'symphony-setup';
