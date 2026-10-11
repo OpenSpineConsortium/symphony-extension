@@ -36,5 +36,7 @@ jobs:
         with:
           name: symphony-chrome
           path: .output/symphony-*-chrome.zip
+          # WXT writes under .output, a dotted folder, which upload-artifact v4 skips as hidden unless told.
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 90
