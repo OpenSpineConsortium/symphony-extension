@@ -22,12 +22,12 @@
   // pixels each time. Nothing here keeps animation state between calls.
 
   var FPS = 30;
-  var DURATION = 23.6;
+  var DURATION = 22.9;
   var VW = 1920, VH = 1080;
 
-  // The orbit's center sits below the frame's middle so that the whole
-  // circle, with the icons that ride it, stays inside the 1080 lines.
-  var CX = 960, CY = 556, R = 410;
+  // The orbit is a full circle of thirteen places, the person at twelve
+  // o'clock and the team around the rest, so it sits in the frame's middle.
+  var CX = 960, CY = 540, R = 410;
   var MARK_R = 130;      // the white disc behind the GitHub mark
   var MARK_INNER = 121;  // the mark itself, which leaves a thin white ring
   var USER_R = 62;
@@ -35,29 +35,47 @@
   var ARROW_START = R - 76;
   var ARROW_END = MARK_R + 20;
 
-  // The slots on the circle, in degrees clockwise from twelve o'clock, in the
-  // order the icons leave the user's shadow. The first three go the long way
-  // round so that the right-hand slots fill without any icon crossing another;
-  // the last three stop short on the left.
-  var SLOT_STEP = 19;
-  var SLOTS = [19, 38, 57, -57, -38, -19];
+  // Thirteen places round the circle, the person at twelve o'clock and six
+  // pairs of Claude icons, in degrees clockwise from twelve. The icons leave
+  // the user's shadow two at a time, one clockwise and one counter-clockwise,
+  // and the two sides mirror each other throughout. The first pair out goes
+  // the farthest, to the two places either side of six o'clock, and each
+  // later pair stops one place nearer the top, so nobody crosses anybody:
+  // the icons travel as two trains, one place apart, and all of them land
+  // at the same moment.
+  var PAIRS = 6;
+  var SLOT_STEP = 360 / (2 * PAIRS + 1);
+  var SLOTS = [];
+  for (var pi = 1; pi <= PAIRS; pi++) {
+    SLOTS.push((PAIRS + 1 - pi) * SLOT_STEP);
+    SLOTS.push(-(PAIRS + 1 - pi) * SLOT_STEP);
+  }
 
   var T = {
     markIn: [0.0, 0.9],
     userIn: [0.3, 1.2],
     ringIn: [0.4, 1.4],
-    ringOut: [10.1, 12.0],
+    ringOut: [8.0, 9.8],
     userArrow: [0.9, 1.5],
+    // The pull requests: a ball every pulsePeriod at first. From accelFrom,
+    // the first launch the whole team joins, each interval is accelFactor
+    // of the one before, down to minInterval, and the balls fly faster as
+    // the mark heats. The heat rises from heatFrom; at white the mark's
+    // glow has flooded the whole frame, and the white cools into the
+    // title's night over cool.
     pulseStart: 2.1, pulsePeriod: 1.6, pulseTravel: 0.8,
-    // The long trips take four times the short ones, so with this stagger an
-    // icon lands on the right each time one lands on the left.
-    claudeStart: 4.5, claudeStagger: 0.9, longTrip: 3.6, shortTrip: 0.9,
-    claudeArrows: 10.1, claudeArrowStagger: 0.1, arrowDraw: 0.6,
-    pushIn: [9.9, 15.9],
-    fadeOut: [15.9, 16.9],
-    titleIn: [16.9, 18.4],
-    typing: [18.6, 20.6],
-    caretOff: 22.0
+    accelFrom: 10.1, accelFactor: 0.76, minInterval: 0.1, fastTravel: 0.42,
+    heatFrom: 12.4, white: 15.9,
+    // The trains leave at claudeStart and every icon is in its place at
+    // claudeLand: one clock, eased in and out, moves both trains, and a pair
+    // leaves the user's shadow each time the clock has advanced one place.
+    claudeStart: 4.5, claudeLand: 7.7,
+    claudeArrows: 8.0, claudeArrowStagger: 0.12, arrowDraw: 0.6,
+    pushIn: [8.0, 15.9],
+    cool: [15.9, 17.0],
+    titleIn: [16.3, 17.6],
+    typing: [17.9, 19.9],
+    caretOff: 21.3
   };
 
   var IVORY = '#F0EEE6';
@@ -225,21 +243,25 @@
     c.restore();
   }
 
-  function drawMark(c, t, glow) {
+  function drawMark(c, t, glow, h) {
     var a = span(t, T.markIn[0], T.markIn[1]);
     if (a <= 0) return;
-    var s = 0.86 + 0.14 * a;
+    var s = (0.86 + 0.14 * a) * (1 + 0.1 * h);
     c.save();
     c.translate(CX, CY);
     c.scale(s, s);
     c.globalAlpha = a;
     c.fillStyle = '#FFFFFF';
-    c.shadowColor = 'rgba(255,255,255,' + (0.9 * glow) + ')';
-    c.shadowBlur = 48 * glow;
+    // the halo: a flash at each landing, and a warm glow that grows with
+    // the heat until the frame is nothing but light
+    c.shadowColor = 'rgba(255,' + Math.round(255 - 18 * h) + ',' + Math.round(255 - 40 * h) + ',' + Math.min(1, 0.9 * glow + 0.7 * h) + ')';
+    c.shadowBlur = 48 * glow + 240 * h;
     c.beginPath();
     c.arc(0, 0, MARK_R, 0, Math.PI * 2);
     c.fill();
     c.shadowBlur = 0;
+    // the mark itself burns out into the white as the heat rises
+    c.globalAlpha = a * (1 - h * h);
     c.fillStyle = '#0D1117';
     var k = (MARK_INNER * 2) / 16;
     c.translate(-MARK_INNER, -MARK_INNER);
@@ -248,10 +270,11 @@
     c.restore();
   }
 
-  function drawArrivalRing(c, since, count) {
+  function drawArrivalRing(c, since, count, h) {
     var u = since / 0.7;
     if (u < 0 || u >= 1) return;
-    var strength = 0.6 + 0.4 * Math.min(1, (count - 1) / 6);
+    // the rings thin out as the beat quickens, or they would pile up
+    var strength = (0.6 + 0.4 * Math.min(1, (count - 1) / 6)) * (1 - h);
     var grow = 1 - Math.pow(1 - u, 3);
     c.save();
     c.globalAlpha = 0.38 * (1 - u) * strength;
@@ -317,9 +340,11 @@
 
   // ---- the timing of the pieces ------------------------------------------
 
+  // The arrows draw in a ripple from the top down both sides at once: the
+  // pair nearest the person first, the pair either side of six o'clock last.
   function arrowBegin(slot) {
     if (slot === 0) return T.userArrow[0];
-    return T.claudeArrows + (Math.abs(slot) / SLOT_STEP - 1) * T.claudeArrowStagger;
+    return T.claudeArrows + (Math.round(Math.abs(slot) / SLOT_STEP) - 1) * T.claudeArrowStagger;
   }
   function arrowDone(slot) {
     if (slot === 0) return T.userArrow[1];
@@ -329,56 +354,101 @@
     return span(t, arrowBegin(slot), arrowDone(slot));
   }
 
-  // The balls follow one clock, so that once every arrow is drawn they all
-  // leave together. A ball joins at rest and takes the next departure, never
-  // one that left before its arrow was finished.
-  function ballState(slot, t) {
-    var done = arrowDone(slot);
-    if (t < done) return null;
-    var appear = ease((t - done) / 0.3);
-    var k = Math.floor((t - T.pulseStart) / T.pulsePeriod);
-    var launch = T.pulseStart + k * T.pulsePeriod;
-    var local = t - launch;
-    if (t >= T.pulseStart && local < T.pulseTravel && launch >= done) {
-      var q = ease(local / T.pulseTravel);
-      var fade = q < 0.86 ? 1 : 1 - (q - 0.86) / 0.14;
-      return { mode: 'travel', q: q, alpha: appear * fade };
-    }
-    var nextLaunch, restStart;
-    if (t < T.pulseStart) { nextLaunch = T.pulseStart; restStart = done; }
-    else if (launch < done) { nextLaunch = launch + T.pulsePeriod; restStart = done; }
-    else { nextLaunch = launch + T.pulsePeriod; restStart = launch + T.pulseTravel; }
-    var r = clamp01((t - restStart) / (nextLaunch - restStart));
-    var breath = (nextLaunch - restStart) < 0.5 ? 0 : 0.5 - 0.5 * Math.cos(2 * Math.PI * r);
-    var fadeIn = ease((t - restStart) / 0.25);
-    return { mode: 'rest', breath: breath, alpha: appear * fadeIn };
+  // How hot the mark is: nothing until heatFrom, everything at white.
+  function heat(t) {
+    return ease((t - T.heatFrom) / (T.white - T.heatFrom));
   }
 
+  // Every launch of the balls, with the time each takes to reach the mark,
+  // worked out once: the steady beat, then the quickening. The balls follow
+  // this one clock, so that once every arrow is drawn they all leave
+  // together.
+  var LAUNCHES = (function () {
+    var list = [];
+    var at = T.pulseStart, gap = T.pulsePeriod;
+    while (at < T.accelFrom - 1e-6) {
+      list.push({ at: at, travel: T.pulseTravel });
+      at += gap;
+    }
+    while (at < T.white + 1) {
+      list.push({ at: at, travel: T.pulseTravel + (T.fastTravel - T.pulseTravel) * heat(at) });
+      gap = Math.max(T.minInterval, gap * T.accelFactor);
+      at += gap;
+    }
+    return list;
+  })();
+
+  // The balls on one arrow at time t: every launch since the arrow was
+  // drawn that is still in flight (a ball never takes a launch that left
+  // before its arrow was finished), and, while nothing is in flight, one
+  // ball at rest breathing until the next launch.
+  function ballsOn(slot, t) {
+    var done = arrowDone(slot);
+    if (t < done) return [];
+    var appear = ease((t - done) / 0.3);
+    var out = [], lastLanded = -1, next = -1;
+    for (var j = 0; j < LAUNCHES.length; j++) {
+      var L = LAUNCHES[j];
+      if (L.at < done) continue;
+      if (L.at > t) { next = L.at; break; }
+      var local = t - L.at;
+      if (local < L.travel) {
+        var q = ease(local / L.travel);
+        var fade = q < 0.86 ? 1 : 1 - (q - 0.86) / 0.14;
+        out.push({ mode: 'travel', q: q, alpha: appear * fade });
+      } else {
+        lastLanded = L.at + L.travel;
+      }
+    }
+    if (!out.length && next > 0) {
+      var restStart = lastLanded > 0 ? lastLanded : done;
+      var r = clamp01((t - restStart) / (next - restStart));
+      var breath = (next - restStart) < 0.5 ? 0 : 0.5 - 0.5 * Math.cos(2 * Math.PI * r);
+      var fadeIn = ease((t - restStart) / 0.25);
+      out.push({ mode: 'rest', breath: breath, alpha: appear * fadeIn });
+    }
+    return out;
+  }
+
+  // The landings so far: the glow they leave on the mark, which adds up as
+  // they come faster, and the last one's age and size for the ring.
   function landing(t) {
-    var k = Math.floor((t - T.pulseStart - T.pulseTravel) / T.pulsePeriod);
-    if (k < 0) return { glow: 0, since: -1, count: 0 };
-    var landed = T.pulseStart + k * T.pulsePeriod + T.pulseTravel;
-    var launch = landed - T.pulseTravel;
-    var count = arrowDone(0) <= launch ? 1 : 0;
-    for (var i = 0; i < SLOTS.length; i++) if (arrowDone(SLOTS[i]) <= launch) count++;
-    var since = t - landed;
-    return { glow: Math.exp(-since / 0.35), since: since, count: count };
+    var glow = 0, since = -1, count = 0;
+    for (var j = 0; j < LAUNCHES.length; j++) {
+      var L = LAUNCHES[j], landed = L.at + L.travel;
+      if (landed > t) break;
+      since = t - landed;
+      glow += Math.exp(-since / 0.35);
+      count = arrowDone(0) <= L.at ? 1 : 0;
+      for (var i = 0; i < SLOTS.length; i++) if (arrowDone(SLOTS[i]) <= L.at) count++;
+    }
+    return { glow: Math.min(1, glow), since: since, count: count };
+  }
+
+  // The trains' clock: how many places the first pair has travelled, from
+  // zero at claudeStart to PAIRS at claudeLand, eased at both ends so the
+  // trains pull away gently and settle gently.
+  function trainClock(t) {
+    return PAIRS * ease((t - T.claudeStart) / (T.claudeLand - T.claudeStart));
   }
 
   // Where a Claude icon is at time t: null before it has left the user's
-  // shadow, otherwise its angle, its scale and how far along it is.
+  // shadow, otherwise its angle and its scale. Icon i belongs to pair
+  // floor(i / 2) + 1, clockwise when i is even and counter-clockwise when
+  // odd; its pair leaves when the clock reaches the pair's number less one
+  // and travels until it reaches its own place, PAIRS + 1 - pair places out.
   function claudeState(i, t) {
-    var depart = T.claudeStart + i * T.claudeStagger;
-    if (t < depart) return null;
-    var slot = SLOTS[i];
-    var travel = slot > 0 ? 360 - slot : -slot;
-    var trip = slot > 0 ? T.longTrip : T.shortTrip;
-    var p = ease((t - depart) / trip);
-    var angle = -travel * p;
-    var grow = 0.6 + 0.4 * ease((t - depart) / 0.5);
-    var settled = t - (depart + trip);
+    var pair = Math.floor(i / 2) + 1;
+    var dir = i % 2 === 0 ? 1 : -1;
+    var places = PAIRS + 1 - pair;
+    var u = trainClock(t) - (pair - 1);
+    if (u <= 0) return null;
+    var travelled = Math.min(places, u);
+    var angle = dir * travelled * SLOT_STEP;
+    var grow = 0.6 + 0.4 * ease(u / 0.6);
+    var settled = t - T.claudeLand;
     var pop = settled > 0 && settled < 0.35 ? 1 + 0.07 * Math.sin(Math.PI * settled / 0.35) : 1;
-    return { angle: angle, scale: grow * pop, slot: slot, p: p };
+    return { angle: angle, scale: grow * pop, slot: SLOTS[i] };
   }
 
   // ---- the frame ---------------------------------------------------------
@@ -403,12 +473,12 @@
   function drawScene(c, t) {
     c.setTransform(1, 0, 0, 1, 0, 0);
     c.clearRect(0, 0, VW, VH);
-    // Once the team has settled, the picture is a crown over the mark and
-    // sits high in the frame; a slow push-in, with a drift down, carries it
-    // toward the middle while the pull requests flow.
+    // Once the team has settled, a slow push-in on the circle's center keeps
+    // the picture alive while the pull requests flow; the circle fills the
+    // frame's height, so the push stays small.
     var push = span(t, T.pushIn[0], T.pushIn[1]);
-    var z = 1 + 0.1 * push;
-    c.setTransform(z, 0, 0, z, 960 - z * 960, 400 + 50 * push - z * 400);
+    var z = 1 + 0.045 * push;
+    c.setTransform(z, 0, 0, z, CX - z * CX, CY - z * CY);
 
     var ringA = 0.08 * span(t, T.ringIn[0], T.ringIn[1]) * (1 - span(t, T.ringOut[0], T.ringOut[1]));
     if (ringA > 0) {
@@ -421,9 +491,9 @@
       c.restore();
     }
 
-    var land = landing(t);
-    drawMark(c, t, land.glow);
-    drawArrivalRing(c, land.since, land.count);
+    var land = landing(t), h = heat(t);
+    drawMark(c, t, land.glow, h);
+    drawArrivalRing(c, land.since, land.count, h);
 
     var slots = [0].concat(SLOTS);
     var i, slot, st;
@@ -431,8 +501,10 @@
 
     for (i = 0; i < slots.length; i++) {
       slot = slots[i];
-      st = ballState(slot, t);
-      if (!st || st.alpha <= 0) continue;
+      var balls = ballsOn(slot, t);
+      for (var b = 0; b < balls.length; b++) {
+      st = balls[b];
+      if (st.alpha <= 0) continue;
       var color = slot === 0 ? USER_BALL : CLAUDE_BALL;
       var start = onCircle(slot, ARROW_START), end = onCircle(slot, ARROW_END);
       if (st.mode === 'travel') {
@@ -458,6 +530,7 @@
         drawBall(c, x, y, 8.5, color, st.alpha, 1);
       } else {
         drawBall(c, start.x, start.y, 7.2 + 1.8 * st.breath, color, st.alpha, 0.6 + 0.6 * st.breath);
+      }
       }
     }
 
@@ -543,17 +616,43 @@
     c.restore();
   }
 
-  function sceneAlpha(t) { return 1 - span(t, T.fadeOut[0], T.fadeOut[1]); }
+  // The light, drawn over everything in the output's own pixels so that it
+  // reaches the frame's corners whatever the canvas size: before white, the
+  // mark's heat spreading from its center until the last stretch floods the
+  // frame; after white, the same warm white cooling away over the title.
+  var WARM = '255,250,242';
+  function drawLight(c, t) {
+    var a;
+    if (t < T.white) {
+      var h = heat(t);
+      if (h <= 0) return;
+      var px = fitX + CX * fitScale, py = fitY + CY * fitScale;
+      // the glow stays the mark's for most of the climb, white at its heart
+      // and dark at the frame's edge, and only at the end reaches the corners
+      var reach = (MARK_R * 1.4 + 1500 * Math.pow(h, 2.2)) * fitScale;
+      a = Math.pow(h, 0.9);
+      var g = c.createRadialGradient(px, py, 0, px, py, reach);
+      g.addColorStop(0, 'rgba(255,248,236,' + Math.min(1, 0.35 + h) + ')');
+      g.addColorStop(0.25, 'rgba(255,245,230,' + (0.8 * a) + ')');
+      g.addColorStop(1, 'rgba(255,236,214,0)');
+      c.fillStyle = g;
+      c.fillRect(0, 0, W, H);
+      a = ease((h - 0.82) / 0.18);
+    } else {
+      a = 1 - span(t, T.cool[0], T.cool[1]);
+    }
+    if (a > 0) {
+      c.fillStyle = 'rgba(' + WARM + ',' + a + ')';
+      c.fillRect(0, 0, W, H);
+    }
+  }
 
   function renderAt(t) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     drawBackground(ctx);
-    var sa = sceneAlpha(t);
-    if (sa > 0) {
+    if (t < T.white) {
       drawScene(sctx, t);
-      ctx.globalAlpha = sa;
       ctx.drawImage(scene, fitX, fitY, VW * fitScale, VH * fitScale);
-      ctx.globalAlpha = 1;
     }
     if (t >= T.titleIn[0]) {
       ctx.save();
@@ -562,6 +661,7 @@
       drawTitle(ctx, t);
       ctx.restore();
     }
+    drawLight(ctx, t);
   }
 
   window.renderAt = renderAt;

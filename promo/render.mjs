@@ -18,7 +18,7 @@ const pageUrl = pathToFileURL(join(here, 'index.html')).href;
 const CHROME = process.env.CHROME_PATH || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
 const FFMPEG = process.env.FFMPEG || 'ffmpeg';
 const WIDTH = 1920, HEIGHT = 1080, FPS = 30;
-const STORE_TIME = 13.5; // every ball is mid-flight on every arrow
+const STORE_TIME = 12.6; // every ball is mid-flight on every arrow, before the heat
 
 function run(cmd, args) {
   console.log('> ' + cmd + ' ' + args.join(' '));
